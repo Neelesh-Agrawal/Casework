@@ -61,7 +61,7 @@ export default function FinalScreen({
 
     const topPrinciples = principles.slice(0, 8).map(p => p.principle).join(', ');
 
-    const prompt = `You are writing a professional UX design portfolio case study for a junior designer who just completed DesignQuest — a game where players make real product design decisions for a startup called Launchly.
+    const prompt = `You are writing a professional UX design portfolio case study for a junior designer who just completed Casework — a game where players make real product design decisions for a startup called Launchly.
 
 Their results:
 - Final Score: ${clamped}/${maxScore} (${pct}%)
@@ -72,7 +72,7 @@ Their results:
 
 Write a 3-paragraph portfolio case study in first person as if the designer is writing it for LinkedIn or their portfolio. 
 
-Paragraph 1: What DesignQuest is and what challenge the player tackled (2-3 sentences)
+Paragraph 1: What Casework is and what challenge the player tackled (2-3 sentences)
 Paragraph 2: Key decisions made and design thinking demonstrated based on their DNA profile (3-4 sentences — be specific to their DNA scores, not generic)
 Paragraph 3: What they learned and how this shapes their design approach going forward (2-3 sentences)
 
@@ -97,9 +97,9 @@ Write in a professional but human tone. No bullet points. No headers. Just three
     const dnaParts = Object.entries(DNA_TRAITS).map(([key, config]) => {
       return `${config.label}: ${getDNALabel(key, dna?.[key] ?? 50)}`;
     }).join(' | ');
-    const text = `I just completed DesignQuest and earned "${ending.title}" with ${clamped}/${maxScore} Design Rep!\n\nMy Designer DNA: ${dnaParts}\n\nTitles earned: ${titles?.join(', ') || 'None'}\n\n#DesignQuest #UXDesign #ProductDesign`;
+    const text = `I just completed Casework and earned "${ending.title}" with ${clamped}/${maxScore} Design Rep!\n\nMy Designer DNA: ${dnaParts}\n\nTitles earned: ${titles?.join(', ') || 'None'}\n\n#Casework #UXDesign #ProductDesign`;
     if (navigator.share) {
-      navigator.share({ title: 'My DesignQuest Results', text }).catch(() => {});
+      navigator.share({ title: 'My Casework Results', text }).catch(() => {});
     } else {
       navigator.clipboard?.writeText(text).then(() => alert('Copied to clipboard!')).catch(() => {});
     }

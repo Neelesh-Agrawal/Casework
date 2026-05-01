@@ -1,4 +1,4 @@
-# DesignQuest (Day 23)
+# Casework (Day 23)
 
 A design-learning game built with **React** and **Vite**: scenarios, consequences, progress, and optional **Groq** or **Anthropic** API features (AI critic, portfolio text).
 

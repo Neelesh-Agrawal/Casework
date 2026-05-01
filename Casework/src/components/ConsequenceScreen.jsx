@@ -93,7 +93,7 @@ export default function ConsequenceScreen({
           ? `Selected option ${choiceId} in the interactive task`
           : scenario?.choices?.find(c => c.id === choiceId)?.text || choiceId;
 
-        const prompt = `You are a senior UX design mentor reviewing a student's decision in DesignQuest, a design learning game.
+        const prompt = `You are a senior UX design mentor reviewing a student's decision in Casework, a design learning game.
 
 Scenario: "${uiTask ? uiTask.title : scenario?.title}"
 The student chose: "${choiceText}"
@@ -142,7 +142,7 @@ Be specific to this scenario, direct, and honest. Do not repeat the outcome text
         ? `Selected option ${choiceId} in the interactive task`
         : scenario?.choices?.find(c => c.id === choiceId)?.text || choiceId;
 
-      const prompt = `You are a warm but honest senior UX design mentor in DesignQuest.
+      const prompt = `You are a warm but honest senior UX design mentor in Casework.
 
 Scenario: "${uiTask ? uiTask.title : scenario?.title}"
 Student chose: "${choiceText}"

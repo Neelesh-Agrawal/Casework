@@ -16,8 +16,8 @@ export default function SplashScreen({ onStart, onResume, savedGame, chapterCoun
       <div className="splash__grid" aria-hidden="true" />
 
       <div className="splash__eyebrow">A Design Learning Game</div>
-      <h1 className="splash__title">DesignQuest</h1>
-      <div className="splash__title-sub">by Launchly</div>
+      <h1 className="splash__title">Casework</h1>
+      <div className="splash__title-sub">Real decisions. Real consequences.</div>
       <p className="splash__tagline">"Every decision shapes the product. And you."</p>
 
       {savedGame && (
@@ -75,7 +75,7 @@ export default function SplashScreen({ onStart, onResume, savedGame, chapterCoun
             <p className="splash__warn">New game will overwrite saved progress</p>
           </>
         ) : (
-          <button className="btn btn-primary" onClick={onStart} aria-label="Start DesignQuest">Start Game →</button>
+          <button className="btn btn-primary" onClick={onStart} aria-label="Start Casework">Start Game →</button>
         )}
       </div>
     </div>
