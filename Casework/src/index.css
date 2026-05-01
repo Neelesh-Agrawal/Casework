@@ -1180,6 +1180,29 @@ button:focus-visible,
     padding: 16px 16px 16px 48px;
   }
 
+  .scenario__header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .scenario__number {
+    white-space: normal;
+    line-height: 1.45;
+  }
+
+  .scenario__progress-bar {
+    margin: 0;
+    width: 100%;
+  }
+
+  .scenario__title {
+    font-size: 1rem;
+    line-height: 1.4;
+    margin-bottom: 12px;
+  }
+
   .chapter-summary__score-display {
     padding: 24px;
   }
@@ -1201,6 +1224,37 @@ button:focus-visible,
   .final-screen__actions .btn {
     width: 100%;
     justify-content: center;
+  }
+
+  .splash__title-sub {
+    max-width: 290px;
+    line-height: 1.35;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .splash__cta-actions {
+    width: 100%;
+    gap: 12px;
+  }
+
+  .splash__cta-actions .btn {
+    width: min(360px, 100%);
+    justify-content: center;
+  }
+
+  .resume-card__row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .final-tabs {
+    max-width: 100%;
+  }
+
+  .final-tab {
+    font-size: 10px;
+    padding: 8px 2px;
   }
 }
 
