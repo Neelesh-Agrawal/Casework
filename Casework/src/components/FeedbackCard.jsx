@@ -23,6 +23,7 @@ export default function FeedbackCard({
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const [status, setStatus] = useState('idle');
+  const [syncStatus, setSyncStatus] = useState('idle');
   const [error, setError] = useState('');
 
   const isQuick = variant === 'quick';
@@ -46,25 +47,31 @@ export default function FeedbackCard({
     comment: note.trim(),
   });
 
-  const sendFeedback = async (value, note = '') => {
-    setStatus('sending');
+  const runSync = (submission) => {
+    setSyncStatus('syncing');
+    submission.sync().then((result) => {
+      setSyncStatus(result.ok ? 'synced' : 'failed');
+    });
+  };
+
+  const sendFeedback = (value, note = '') => {
+    if (status === 'sent') return;
+
     setError('');
-    const result = await submitChapterFeedback(buildPayload(value, note));
-    if (result.ok) {
-      setRating(value);
-      setStatus('sent');
-    } else {
-      setStatus('error');
-      setError('Saved on this device — couldn\'t reach the server. Try again?');
-    }
+    setRating(value);
+    setStatus('sent');
+
+    const submission = submitChapterFeedback(buildPayload(value, note));
+    runSync(submission);
   };
 
   const handleQuickPick = (value) => {
-    if (status === 'sending' || status === 'sent') return;
+    if (status === 'sent') return;
     sendFeedback(value);
   };
 
   const handleFullSubmit = () => {
+    if (status === 'sent') return;
     if (!rating) {
       setError('Pick a rating to continue.');
       return;
@@ -73,10 +80,36 @@ export default function FeedbackCard({
   };
 
   if (status === 'sent') {
+    const picked = QUICK_RATINGS.find(o => o.value === rating);
     return (
-      <div className={`feedback-card feedback-card--${variant} feedback-card--done`}>
-        <div className="feedback-card__done-icon" aria-hidden="true">✓</div>
-        <p className="feedback-card__done-text">Thanks — this helps us improve Casework.</p>
+      <div
+        className={`feedback-card feedback-card--${variant} feedback-card--done`}
+        role="status"
+        aria-live="polite"
+      >
+        <div className="feedback-card__done-row">
+          <div className="feedback-card__done-icon" aria-hidden="true">✓</div>
+          <p className="feedback-card__done-text">Thanks — this helps us improve Casework.</p>
+        </div>
+        {isQuick && picked && (
+          <p className="feedback-card__done-pick" aria-hidden="true">
+            {picked.emoji} {picked.label}
+          </p>
+        )}
+        {syncStatus === 'syncing' && (
+          <p className="feedback-card__sync">
+            <span className="feedback-card__sync-dot" aria-hidden="true" />
+            Saving your feedback…
+          </p>
+        )}
+        {syncStatus === 'synced' && (
+          <p className="feedback-card__sync feedback-card__sync--ok">Saved successfully.</p>
+        )}
+        {syncStatus === 'failed' && (
+          <p className="feedback-card__sync feedback-card__sync--fail">
+            Couldn&apos;t reach the server — noted on this device.
+          </p>
+        )}
       </div>
     );
   }
@@ -99,7 +132,6 @@ export default function FeedbackCard({
               type="button"
               className={`feedback-card__emoji ${rating === opt.value ? 'selected' : ''}`}
               onClick={() => handleQuickPick(opt.value)}
-              disabled={status === 'sending'}
               aria-label={`${opt.label} — ${opt.value} out of 5`}
             >
               <span className="feedback-card__emoji-icon" aria-hidden="true">{opt.emoji}</span>
@@ -138,9 +170,8 @@ export default function FeedbackCard({
             type="button"
             className="btn btn-primary feedback-card__submit"
             onClick={handleFullSubmit}
-            disabled={status === 'sending'}
           >
-            {status === 'sending' ? 'Sending…' : 'Send Feedback'}
+            Send Feedback
           </button>
         </>
       )}

@@ -36,10 +36,7 @@ export function saveChapterFeedbackLocally(entry) {
   }
 }
 
-export async function submitChapterFeedback(entry) {
-  const payload = { ...entry, savedAt: Date.now() };
-  saveChapterFeedbackLocally(payload);
-
+export async function syncFeedbackRemote(payload) {
   const endpoint = (import.meta.env.VITE_FEEDBACK_ENDPOINT || '/api/feedback').trim();
 
   try {
@@ -52,4 +49,14 @@ export async function submitChapterFeedback(entry) {
   } catch {
     return { ok: false, remote: true };
   }
+}
+
+/** Saves locally immediately; call `.sync()` to upload in the background. */
+export function submitChapterFeedback(entry) {
+  const payload = { ...entry, savedAt: Date.now() };
+  saveChapterFeedbackLocally(payload);
+  return {
+    payload,
+    sync: () => syncFeedbackRemote(payload),
+  };
 }
