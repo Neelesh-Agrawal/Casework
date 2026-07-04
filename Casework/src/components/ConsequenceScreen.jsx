@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import ColorHexText from './ColorHexText';
 
 const PRINCIPLE_ICONS = {
   "Hick's Law": '⚡', "Hick's Law + Form Design": '⚡',
@@ -128,7 +129,7 @@ function ComparisonReveal({ scenario, choiceId, consequences, uiTask }) {
             color: 'rgba(255,255,255,0.85)',
             fontStyle: 'italic',
           }}>
-            "{yourChoice.text}"
+            <ColorHexText>{yourChoice.text}</ColorHexText>
           </p>
           {yourConsequence?.lesson && (
             <p style={{
@@ -137,7 +138,7 @@ function ComparisonReveal({ scenario, choiceId, consequences, uiTask }) {
               lineHeight: 1.5,
               color: 'rgba(255,255,255,0.55)',
             }}>
-              {truncate(yourConsequence.lesson, 24)}
+              <ColorHexText>{truncate(yourConsequence.lesson, 24)}</ColorHexText>
             </p>
           )}
         </div>
@@ -163,7 +164,7 @@ function ComparisonReveal({ scenario, choiceId, consequences, uiTask }) {
               color: 'rgba(255,255,255,0.85)',
               fontStyle: 'italic',
             }}>
-              "{bestChoice.text}"
+              <ColorHexText>{bestChoice.text}</ColorHexText>
             </p>
             {bestConsequence?.lesson && (
               <p style={{
@@ -172,7 +173,7 @@ function ComparisonReveal({ scenario, choiceId, consequences, uiTask }) {
                 lineHeight: 1.5,
                 color: 'rgba(255,255,255,0.55)',
               }}>
-                {truncate(bestConsequence.lesson, 24)}
+                <ColorHexText>{truncate(bestConsequence.lesson, 24)}</ColorHexText>
               </p>
             )}
           </div>
@@ -227,8 +228,11 @@ export default function ConsequenceScreen({
 
         <div className="consequence__card story">
           <div className="consequence__card-label">What happened</div>
-          <p className="consequence__story">{consequence.story}</p>
-          <p className="consequence__lesson"><strong>Lesson: </strong>{consequence.lesson}</p>
+          <ColorHexText as="p" className="consequence__story">{consequence.story}</ColorHexText>
+          <p className="consequence__lesson">
+            <strong>Lesson: </strong>
+            <ColorHexText>{consequence.lesson}</ColorHexText>
+          </p>
         </div>
 
         <ComparisonReveal
@@ -245,7 +249,7 @@ export default function ConsequenceScreen({
               <span className="principle-box__icon" aria-hidden="true">{icon}</span>
               <span className="principle-box__title">{consequence.principle}</span>
             </div>
-            <p className="principle-box__detail">{consequence.principleDetail}</p>
+            <ColorHexText as="p" className="principle-box__detail">{consequence.principleDetail}</ColorHexText>
           </div>
         </div>
 

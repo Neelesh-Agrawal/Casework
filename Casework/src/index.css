@@ -2501,3 +2501,56 @@ button:focus-visible,
     display: none;
   }
 }
+
+/* ── Inline hex color previews ───────────────────────────────────────────── */
+.color-hex {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 2px;
+  padding: 2px 8px 2px 4px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.color-hex__swatch {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
+}
+
+.color-hex__swatch--light {
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+}
+
+.color-hex__code {
+  font-family: var(--font-mono);
+  font-size: 0.8125em;
+  color: var(--accent);
+  letter-spacing: 0.02em;
+}
+
+.color-hex__label {
+  font-size: 0.75em;
+  color: var(--text-muted);
+  margin-left: 2px;
+}
+
+.contrast-task__hex-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.contrast-task__hex-row .color-hex {
+  margin: 0;
+  background: rgba(0, 0, 0, 0.2);
+}

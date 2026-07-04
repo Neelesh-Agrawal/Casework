@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import UITask from './UITask';
+import ColorHexText from './ColorHexText';
 
 function seededShuffle(list, seedValue) {
   const result = [...list];
@@ -82,7 +83,7 @@ export default function ScenarioScreen({
         ) : scenario ? (
           <>
             <div className="scenario__card">
-              <p className="scenario__narration">{scenario.narration}</p>
+              <ColorHexText as="p" className="scenario__narration">{scenario.narration}</ColorHexText>
             </div>
             <p className="scenario__choices-label">Choose your response</p>
             <p className="scenario__shortcut-hint">Tip: Press 1, 2, or 3 to choose quickly.</p>
@@ -96,7 +97,7 @@ export default function ScenarioScreen({
                   aria-label={`Option ${idx + 1}: ${choice.text}`}
                 >
                   <span className="choice-btn__letter" aria-hidden="true">{idx + 1}</span>
-                  {choice.text}
+                  <ColorHexText>{choice.text}</ColorHexText>
                 </button>
               ))}
             </div>

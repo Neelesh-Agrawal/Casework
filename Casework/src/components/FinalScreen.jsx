@@ -4,6 +4,7 @@ import { DNA_TRAITS, getDNALabel } from '../hooks/useProgression';
 import { createMessage, hasLlmKey } from '../lib/llm';
 import { buildMissedItems } from '../lib/uiTasks';
 import FeedbackCard from './FeedbackCard';
+import ColorHexText from './ColorHexText';
 
 const LLM_READY = hasLlmKey();
 
@@ -212,22 +213,27 @@ Write in a professional but human tone. No bullet points. No headers. Just three
                     <div key={i} className="missed-item">
                       <div className="missed-item__title">{item.title}</div>
                       <p className="missed-item__context">
-                        <span className="missed-item__context-label">Scenario context:</span> {item.context}
+                        <span className="missed-item__context-label">Scenario context:</span>{' '}
+                        <ColorHexText>{item.context}</ColorHexText>
                       </p>
                       <div className="missed-item__row">
                         <div className="missed-item__col">
                           <div className="missed-item__col-label">You chose</div>
-                          <div className="missed-item__col-text your-choice">{item.youChose}</div>
+                          <div className="missed-item__col-text your-choice">
+                            <ColorHexText>{item.youChose}</ColorHexText>
+                          </div>
                         </div>
                         <div className="missed-item__arrow">→</div>
                         <div className="missed-item__col">
                           <div className="missed-item__col-label">Best call</div>
-                          <div className="missed-item__col-text best-choice">{item.bestWas}</div>
+                          <div className="missed-item__col-text best-choice">
+                            <ColorHexText>{item.bestWas}</ColorHexText>
+                          </div>
                         </div>
                       </div>
                       {item.principle && (
                         <div className="missed-item__principle">
-                          💡 {item.principle} — {item.lesson}
+                          💡 {item.principle} — <ColorHexText>{item.lesson}</ColorHexText>
                         </div>
                       )}
                     </div>

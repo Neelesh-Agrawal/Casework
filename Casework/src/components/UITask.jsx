@@ -317,8 +317,10 @@ function ContrastTask({ task, onComplete }) {
         {swatches.map(s => {
           const isSel    = selected === s.id;
           const isDimmed = selected && !isSel;
-          const ratio    = parseFloat(s.note);
-          const passes   = ratio >= 4.5;
+          const textColor = s.text || s.hex || '#111827';
+          const bgColor   = s.bg || '#FFFFFF';
+          const ratio     = parseFloat(s.note || s.contrastOnWhite);
+          const passes    = !Number.isNaN(ratio) ? ratio >= 4.5 : true;
 
           return (
             <button
@@ -327,7 +329,7 @@ function ContrastTask({ task, onComplete }) {
               disabled={!!selected}
               style={{
                 flex: '1 1 130px',
-                background: s.bg,
+                background: bgColor,
                 border: `2px solid ${isSel ? T.accent : 'transparent'}`,
                 borderRadius: 12,
                 padding: 0,
@@ -338,47 +340,49 @@ function ContrastTask({ task, onComplete }) {
                 overflow: 'hidden',
                 boxShadow: isSel ? `0 0 0 3px ${T.accentBg}` : '0 2px 12px rgba(0,0,0,0.25)',
               }}
-              aria-label={`Option ${s.id}: ${s.note} contrast ratio`}
+              aria-label={`Option ${s.id}: ${s.label || s.note || textColor}`}
             >
               {/* Card header strip */}
-              <div style={{ background: `${s.text}18`, borderBottom: `1px solid ${s.text}22`, padding: '7px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 9, fontWeight: 700, color: s.text, letterSpacing: '0.06em', fontFamily: T.mono }}>OPTION {s.id}</span>
-                <span style={{ fontSize: 9, color: s.text, fontFamily: T.mono, opacity: 0.7 }}>{s.note} ratio</span>
+              <div style={{ background: `${textColor}18`, borderBottom: `1px solid ${textColor}22`, padding: '7px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: 9, fontWeight: 700, color: textColor, letterSpacing: '0.06em', fontFamily: T.mono }}>OPTION {s.id}</span>
+                <span style={{ fontSize: 9, color: textColor, fontFamily: T.mono, opacity: 0.7 }}>{s.note ? `${s.note} ratio` : (s.label || '')}</span>
               </div>
 
               {/* Card body — real Launchly UI in context */}
               <div style={{ padding: '12px 12px 14px', fontFamily: 'system-ui' }}>
                 {/* Page heading */}
-                <div style={{ fontSize: 14, fontWeight: 700, color: s.text, marginBottom: 4, lineHeight: 1.3 }}>Dashboard Overview</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: textColor, marginBottom: 4, lineHeight: 1.3 }}>{s.label || 'Dashboard Overview'}</div>
                 {/* Sub-label */}
-                <div style={{ fontSize: 9, fontWeight: 600, color: s.text, opacity: 0.6, textTransform: 'uppercase', letterSpacing: '0.09em', marginBottom: 8 }}>Monthly Overview</div>
+                <div style={{ fontSize: 9, fontWeight: 600, color: textColor, opacity: 0.6, textTransform: 'uppercase', letterSpacing: '0.09em', marginBottom: 8 }}>Monthly Overview</div>
                 {/* Body copy */}
-                <p style={{ fontSize: 11, color: s.text, marginBottom: 12, lineHeight: 1.5, opacity: 0.85 }}>
+                <p style={{ fontSize: 11, color: textColor, marginBottom: 12, lineHeight: 1.5, opacity: 0.85 }}>
                   3 active projects · 2 pending reviews. Weekly goal 74% complete.
                 </p>
                 {/* CTA button (inverted) */}
-                <div style={{ display: 'inline-block', background: s.text, color: s.bg, borderRadius: 6, padding: '7px 11px', fontSize: 11, fontWeight: 600, marginBottom: 12 }}>
+                <div style={{ display: 'inline-block', background: textColor, color: bgColor, borderRadius: 6, padding: '7px 11px', fontSize: 11, fontWeight: 600, marginBottom: 12 }}>
                   Open Dashboard →
                 </div>
 
                 {/* Contrast ratio bar */}
-                <div style={{ borderTop: `1px solid ${s.text}22`, paddingTop: 10 }}>
-                  <div style={{ height: 3, borderRadius: 2, background: `${s.text}1A`, overflow: 'hidden', marginBottom: 5 }}>
-                    <div style={{ height: '100%', width: `${Math.min((ratio / 21) * 100, 100)}%`, background: passes ? '#059669' : '#DC2626', borderRadius: 2 }} />
+                {!Number.isNaN(ratio) && (
+                  <div style={{ borderTop: `1px solid ${textColor}22`, paddingTop: 10 }}>
+                    <div style={{ height: 3, borderRadius: 2, background: `${textColor}1A`, overflow: 'hidden', marginBottom: 5 }}>
+                      <div style={{ height: '100%', width: `${Math.min((ratio / 21) * 100, 100)}%`, background: passes ? '#059669' : '#DC2626', borderRadius: 2 }} />
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: 8, color: textColor, opacity: 0.55, fontFamily: 'system-ui' }}>4.5:1 minimum (AA)</span>
+                      <span style={{
+                        fontSize: 8, fontWeight: 700,
+                        padding: '2px 6px', borderRadius: 3,
+                        background: passes ? 'rgba(5,150,105,0.15)' : 'rgba(220,38,38,0.12)',
+                        color: passes ? '#059669' : '#DC2626',
+                        border: `1px solid ${passes ? 'rgba(5,150,105,0.3)' : 'rgba(220,38,38,0.25)'}`,
+                      }}>
+                        {passes ? '✓ PASSES AA' : '✗ FAILS AA'}
+                      </span>
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: 8, color: s.text, opacity: 0.55, fontFamily: 'system-ui' }}>4.5:1 minimum (AA)</span>
-                    <span style={{
-                      fontSize: 8, fontWeight: 700,
-                      padding: '2px 6px', borderRadius: 3,
-                      background: passes ? 'rgba(5,150,105,0.15)' : 'rgba(220,38,38,0.12)',
-                      color: passes ? '#059669' : '#DC2626',
-                      border: `1px solid ${passes ? 'rgba(5,150,105,0.3)' : 'rgba(220,38,38,0.25)'}`,
-                    }}>
-                      {passes ? '✓ PASSES AA' : '✗ FAILS AA'}
-                    </span>
-                  </div>
-                </div>
+                )}
               </div>
             </button>
           );
