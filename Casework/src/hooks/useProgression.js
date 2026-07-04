@@ -27,7 +27,7 @@ export const DNA_TRAITS = {
 
 export const INITIAL_DNA = { riskTolerance: 50, stakeholderStyle: 50, researchLean: 50, userEmpathy: 50 };
 
-// ─── DNA ADJUSTMENTS — all 40 scenarios × 3 choices ─────────────────────────
+// ─── DNA ADJUSTMENTS — v1 (Track 2) scenarios ────────────────────────────────
 const DNA_ADJ = {
   // Ch1
   '1_A': { stakeholderStyle: -15, riskTolerance: -10 },
@@ -174,9 +174,14 @@ const DNA_ADJ = {
   '45_C': { userEmpathy: -10, stakeholderStyle: -10 },
 };
 
-export function updateDNA(dna, scenarioId, choiceId) {
+// ── updateDNA ─────────────────────────────────────────────────────────────────
+// CHANGED FROM v1: added optional externalAdj param.
+// New tracks pass their own DNA_ADJ map (T1_DNA_ADJ, T3_DNA_ADJ, etc.).
+// Track 2 (v1) passes null → falls back to internal DNA_ADJ above.
+export function updateDNA(dna, scenarioId, choiceId, externalAdj = null) {
+  const adjMap = externalAdj || DNA_ADJ;
   const key = `${scenarioId}_${choiceId}`;
-  const adj = DNA_ADJ[key] || {};
+  const adj = adjMap[key] || {};
   const updated = { ...dna };
   for (const [trait, delta] of Object.entries(adj)) {
     updated[trait] = Math.min(100, Math.max(0, (updated[trait] || 50) + delta));

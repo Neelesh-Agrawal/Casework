@@ -2,10 +2,22 @@ import React from 'react';
 
 /**
  * ChapterIntro — full-screen chapter opener.
- * Props: chapter ({ id, title, tagline, description }), totalChapters, onContinue
+ * Props:
+ *   chapter        { id, title, tagline, description }
+ *   chapterNumber  1-based sequential number (1, 2, 3, 4...)
+ *   totalChapters  total number of chapters
+ *   onContinue     callback
+ *
+ * chapterNumber is passed separately from chapter.id because new tracks
+ * use non-sequential IDs (101, 102, 301, 302 etc.) that must not be
+ * displayed directly.
  */
-export default function ChapterIntro({ chapter, totalChapters, onContinue }) {
+export default function ChapterIntro({ chapter, chapterNumber, totalChapters, onContinue }) {
   if (!chapter) return null;
+
+  // Fall back to chapter.id only for the original Track 2 where ids happen
+  // to be sequential (1, 2, 3, ...).  All other tracks must pass chapterNumber.
+  const num = chapterNumber || chapter.id;
 
   return (
     <div className="chapter-intro">
@@ -14,8 +26,8 @@ export default function ChapterIntro({ chapter, totalChapters, onContinue }) {
       </div>
 
       <div className="chapter-intro__content">
-        <div className="chapter-intro__number" aria-label={`Chapter ${chapter.id} of ${totalChapters}`}>
-          Chapter {chapter.id} of {totalChapters}
+        <div className="chapter-intro__number" aria-label={`Chapter ${num} of ${totalChapters}`}>
+          Chapter {num} of {totalChapters}
         </div>
 
         <h1 className="chapter-intro__title">{chapter.title}</h1>
@@ -28,13 +40,13 @@ export default function ChapterIntro({ chapter, totalChapters, onContinue }) {
 
         <div className="chapter-intro__action">
           <button
-            id={`chapter-${chapter.id}-continue-btn`}
+            id={`chapter-${num}-continue-btn`}
             type="button"
             className="btn btn-primary"
             onClick={onContinue}
-            aria-label={`Begin Chapter ${chapter.id}: ${chapter.title}`}
+            aria-label={`Begin Chapter ${num}: ${chapter.title}`}
           >
-            Begin Chapter {chapter.id} →
+            Begin Chapter {num} →
           </button>
         </div>
       </div>

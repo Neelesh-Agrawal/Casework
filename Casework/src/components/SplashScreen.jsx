@@ -1,4 +1,5 @@
 import React from 'react';
+import TrackBackButton from './TrackBackButton';
 
 export default function SplashScreen({
   onStart,
@@ -10,20 +11,41 @@ export default function SplashScreen({
   scenarioCount,
   principleCount,
   maxRep,
+  onBackToTracks,
+  chapters = [],
+  scenarios = [],
 }) {
   const formatDate = (ts) => {
     if (!ts) return '';
     return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   };
 
-  const progressPct = savedGame
-    ? Math.round(((savedGame.scenarioIndex + (savedGame.chapter - 1) * 5) / scenarioCount) * 100)
-    : 0;
+  const chapterIdx = savedGame
+    ? chapters.findIndex(c => c.id === savedGame.chapter)
+    : -1;
+  const chapterLabel = chapterIdx >= 0 ? chapterIdx + 1 : savedGame?.chapter;
+
+  const progressPct = (() => {
+    if (!savedGame) return 0;
+    if (savedGame.choices?.length) {
+      return Math.min(100, Math.round((savedGame.choices.length / scenarioCount) * 100));
+    }
+    if (scenarios.length) {
+      const completedBefore = scenarios.filter(s => s.chapter < savedGame.chapter).length;
+      const position = completedBefore + (savedGame.scenarioIndex || 0);
+      return Math.min(100, Math.round((position / scenarioCount) * 100));
+    }
+    return 0;
+  })();
 
   return (
     <div className="splash">
       <div className="splash__bg" aria-hidden="true" />
       <div className="splash__grid" aria-hidden="true" />
+
+      {onBackToTracks && (
+        <TrackBackButton onBack={onBackToTracks} className="track-back-btn--splash" />
+      )}
 
       <div className="splash__eyebrow">A Design Learning Game</div>
       <h1 className="splash__title">Casework</h1>
@@ -35,10 +57,9 @@ export default function SplashScreen({
           <div className="resume-card__label">↩ SAVED GAME FOUND</div>
           <div className="resume-card__row">
             <div className="resume-card__info">
-              <div className="resume-card__chapter">Chapter {savedGame.chapter} · Scenario {savedGame.scenarioIndex + 1}</div>
+              <div className="resume-card__chapter">Chapter {chapterLabel} · Scenario {savedGame.scenarioIndex + 1}</div>
               <div className="resume-card__meta">Design Rep: {savedGame.score} · {formatDate(savedGame.savedAt)}</div>
             </div>
-            <span className="resume-card__level">{savedGame.level || 'Junior Designer'}</span>
           </div>
           <div className="resume-card__bar-wrap">
             <div className="resume-card__bar-label">

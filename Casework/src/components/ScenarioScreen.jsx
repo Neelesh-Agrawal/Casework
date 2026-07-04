@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import UITask from './UITask';
-import { UI_TASKS } from '../gameDataExtension';
 
 function seededShuffle(list, seedValue) {
   const result = [...list];
@@ -21,13 +20,10 @@ export default function ScenarioScreen({
   globalScenarioNumber,
   totalScenarios,
   onChoose,
+  uiTask = null,
+  isUITask = false,
 }) {
   const [disabled, setDisabled] = useState(false);
-
-  // UI task slots: show at scenarioIndex 2 (3rd scenario, 0-based)
-  // This keeps it mid-chapter, after users are warmed up
-  const uitaskKey  = `uitask_ch${chapterNum}`;
-  const uiTask     = UI_TASKS[uitaskKey] && scenarioIndex === 2 ? UI_TASKS[uitaskKey] : null;
 
   const handleChoice = (choiceId, taskOverride) => {
     if (disabled) return;
@@ -37,13 +33,12 @@ export default function ScenarioScreen({
 
   const shuffledChoices = useMemo(() => {
     if (!scenario?.choices?.length) return [];
-    // Stable order per scenario to avoid visual reshuffle on re-renders.
     return seededShuffle(scenario.choices, scenario.id);
   }, [scenario]);
 
   // Keyboard shortcuts for text scenarios only
   useEffect(() => {
-    if (uiTask || disabled) return;
+    if (isUITask || disabled) return;
     const onKey = (e) => {
       if (disabled) return;
       const idx = Number(e.key) - 1;
@@ -55,7 +50,7 @@ export default function ScenarioScreen({
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [disabled, onChoose, uiTask, shuffledChoices]);
+  }, [disabled, onChoose, isUITask, shuffledChoices]);
 
   const pct = Math.round((globalScenarioNumber / totalScenarios) * 100);
 
@@ -66,7 +61,9 @@ export default function ScenarioScreen({
         {/* Header */}
         <div className="scenario__header">
           <span className="scenario__number">
-            Ch.{chapterNum} · Scenario {scenarioIndex + 1}/{chapterScenarioCount} · {globalScenarioNumber}/{totalScenarios} overall
+            {isUITask
+              ? `Ch.${chapterNum} · UI Task · ${scenarioIndex + 1}/${chapterScenarioCount} · ${globalScenarioNumber}/${totalScenarios} overall`
+              : `Ch.${chapterNum} · Scenario ${scenarioIndex + 1}/${chapterScenarioCount} · ${globalScenarioNumber}/${totalScenarios} overall`}
           </span>
           <div className="scenario__progress-bar" aria-hidden="true">
             <div className="scenario__progress-fill" style={{ width: `${pct}%` }} />
@@ -74,15 +71,15 @@ export default function ScenarioScreen({
         </div>
 
         <h2 className="scenario__title">
-          {uiTask ? uiTask.title : scenario.title}
+          {isUITask && uiTask ? uiTask.title : scenario?.title}
         </h2>
 
-        {uiTask ? (
+        {isUITask && uiTask ? (
           <UITask
             task={uiTask}
             onComplete={(choiceId) => handleChoice(choiceId, uiTask)}
           />
-        ) : (
+        ) : scenario ? (
           <>
             <div className="scenario__card">
               <p className="scenario__narration">{scenario.narration}</p>
@@ -104,7 +101,7 @@ export default function ScenarioScreen({
               ))}
             </div>
           </>
-        )}
+        ) : null}
 
       </div>
     </div>

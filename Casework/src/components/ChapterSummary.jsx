@@ -1,10 +1,22 @@
 import React from 'react';
-import { getLevel, getNextLevel, DNA_TRAITS, getDNALabel } from '../hooks/useProgression';
+import { DNA_TRAITS, getDNALabel } from '../hooks/useProgression';
+import FeedbackCard from './FeedbackCard';
 
-export default function ChapterSummary({ chapterNum, chapterTitle, totalScore, maxScore, chapterScore, chapterScenarioCount, totalChapters, dna, titles, onContinue }) {
-  const lvl     = getLevel(totalScore);
-  const nextLvl = getNextLevel(totalScore);
-  const pct     = Math.round((totalScore / maxScore) * 100);
+export default function ChapterSummary({
+  chapterNum,
+  chapterId,
+  chapterTitle,
+  trackId,
+  trackLabel,
+  totalScore,
+  maxScore,
+  chapterScore,
+  chapterScenarioCount,
+  totalChapters,
+  dna,
+  onContinue,
+}) {
+  const pct = Math.round((totalScore / maxScore) * 100);
 
   return (
     <div className="chapter-summary">
@@ -14,10 +26,9 @@ export default function ChapterSummary({ chapterNum, chapterTitle, totalScore, m
         </div>
         <h2 className="chapter-summary__title">{chapterTitle}</h2>
 
-        {/* Score */}
         <div className="chapter-summary__score-row">
           <div className="summary-stat">
-            <div className="summary-stat__num" style={{ color: lvl.color }}>{totalScore}</div>
+            <div className="summary-stat__num">{totalScore}</div>
             <div className="summary-stat__label">Total Rep</div>
           </div>
           <div className="summary-stat">
@@ -30,17 +41,6 @@ export default function ChapterSummary({ chapterNum, chapterTitle, totalScore, m
           </div>
         </div>
 
-        {/* Level */}
-        <div className="summary-level">
-          <div className="summary-level__badge" style={{ color: lvl.color, borderColor: `${lvl.color}55`, background: `${lvl.color}15` }}>
-            {lvl.name}
-          </div>
-          {nextLvl && (
-            <p className="summary-level__next">{nextLvl.minScore - totalScore} Rep to {nextLvl.name}</p>
-          )}
-        </div>
-
-        {/* DNA Traits */}
         {dna && (
           <div className="summary-dna">
             <div className="summary-dna__label">Your Designer Traits</div>
@@ -62,17 +62,15 @@ export default function ChapterSummary({ chapterNum, chapterTitle, totalScore, m
           </div>
         )}
 
-        {/* Titles */}
-        {titles && titles.length > 0 && (
-          <div className="summary-titles">
-            <div className="summary-titles__label">Earned Titles</div>
-            <div className="summary-titles__row">
-              {titles.map(t => (
-                <span key={t} className="title-tag">{t}</span>
-              ))}
-            </div>
-          </div>
-        )}
+        <FeedbackCard
+          variant="quick"
+          scope="chapter"
+          trackId={trackId}
+          trackLabel={trackLabel}
+          chapterId={chapterId}
+          chapterNum={chapterNum}
+          chapterTitle={chapterTitle}
+        />
 
         <button className="btn btn-primary" onClick={onContinue} aria-label={chapterNum < totalChapters ? 'Continue to next chapter' : 'See final results'}>
           {chapterNum < totalChapters ? `Chapter ${chapterNum + 1} →` : 'See Final Results →'}

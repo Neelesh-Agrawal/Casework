@@ -20,6 +20,18 @@ export function getGroqModel() {
   return (import.meta.env.VITE_GROQ_MODEL || 'llama-3.3-70b-versatile').trim();
 }
 
+/** Set VITE_ENABLE_LLM=false on public deploys to skip API calls (saves quota + hides key). */
+export function isLlmDisabledForDeploy() {
+  const v = (import.meta.env.VITE_ENABLE_LLM || '').trim().toLowerCase();
+  return v === 'false' || v === '0' || v === 'off' || v === 'no';
+}
+
+/** True if either Groq or Anthropic key is configured and LLM is not explicitly disabled */
+export function hasLlmKey() {
+  if (isLlmDisabledForDeploy()) return false;
+  return Boolean(getGroqApiKey() || getAnthropicApiKey());
+}
+
 /**
  * @param {string} prompt
  * @param {number} maxTokens
@@ -62,9 +74,17 @@ async function createGroqMessage(prompt, maxTokens) {
   return typeof raw === 'string' ? raw : '';
 }
 
-/** True if either Groq or Anthropic key is configured */
-export function hasLlmKey() {
-  return Boolean(getGroqApiKey() || getAnthropicApiKey());
+/** User-friendly message when an LLM request fails (rate limits, outages, etc.) */
+export function getLlmErrorMessage(err) {
+  const status = err?.status;
+  const msg = typeof err?.message === 'string' ? err.message.toLowerCase() : '';
+  if (status === 429 || msg.includes('rate limit') || msg.includes('quota')) {
+    return 'AI mentor is temporarily unavailable (API limit reached). The lesson above is your full feedback for now.';
+  }
+  if (status === 401 || status === 403) {
+    return 'AI mentor is unavailable right now. You can keep playing — all scenarios work without it.';
+  }
+  return 'Could not load AI analysis. Continue below — the lesson and principle are complete without it.';
 }
 
 /**
@@ -73,6 +93,9 @@ export function hasLlmKey() {
  * @returns {Promise<string>}
  */
 export async function createMessage(prompt, maxTokens = 1024) {
+  if (isLlmDisabledForDeploy()) {
+    throw new Error('LLM disabled for this deployment');
+  }
   if (getGroqApiKey()) {
     return createGroqMessage(prompt, maxTokens);
   }

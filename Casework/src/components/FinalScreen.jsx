@@ -1,67 +1,73 @@
 import React, { useState, useMemo } from 'react';
-import { getEnding } from '../gameData';
+import { getEnding as getDefaultEnding } from '../gameData';
 import { DNA_TRAITS, getDNALabel } from '../hooks/useProgression';
 import { createMessage, hasLlmKey } from '../lib/llm';
+import { buildMissedItems } from '../lib/uiTasks';
+import FeedbackCard from './FeedbackCard';
 
 const LLM_READY = hasLlmKey();
 
 const DNA_COLORS = {
-  riskTolerance: '#F59E0B',
+  riskTolerance:    '#F59E0B',
   stakeholderStyle: '#7C3AED',
-  researchLean: '#10B981',
-  userEmpathy: '#00D4FF',
+  researchLean:     '#10B981',
+  userEmpathy:      '#00D4FF',
 };
 
+/**
+ * FinalScreen — game-end results screen.
+ *
+ * Props:
+ *   getEnding  (optional) track-specific ending function; falls back to
+ *              the original gameData.getEnding for Track 2 compatibility.
+ *              Ending objects must have { title, subtitle, description, color }.
+ *              Older shapes (with `desc` instead of `description`) are handled
+ *              automatically via the `resolveEnding` helper below.
+ */
 export default function FinalScreen({
   totalScore, maxScore, principles, totalScenarios,
-  dna, titles, choices, scenarios, onPlayAgain,
+  dna, titles, choices, scenarios, uiTasks, onPlayAgain,
+  getEnding: getEndingProp,
+  trackId,
+  trackLabel,
 }) {
-  const toContextSnippet = (text = '') => {
-    const normalized = text.replace(/\s+/g, ' ').trim();
-    if (!normalized) return '';
-    const max = 170;
-    return normalized.length > max ? `${normalized.slice(0, max)}...` : normalized;
+  // ── Resolve ending ───────────────────────────────────────────────────────────
+  const getEndingFn = getEndingProp || getDefaultEnding;
+  const clamped     = Math.min(Math.max(totalScore, 0), maxScore);
+
+  // Normalise either { title, subtitle, description, color }
+  //              or  { title, desc, ... }  (legacy / simplified shape)
+  const rawEnding = getEndingFn(clamped);
+  const ending = {
+    title:       rawEnding?.title       || 'Designer',
+    subtitle:    rawEnding?.subtitle    || '',
+    description: rawEnding?.description || rawEnding?.desc || '',
+    color:       rawEnding?.color       || '#00D4FF',
   };
 
-  const clamped = Math.min(Math.max(totalScore, 0), maxScore);
-  const ending  = getEnding(clamped);
-  const pct     = Math.round((clamped / maxScore) * 100);
+  const pct = Math.round((clamped / maxScore) * 100);
 
+  // ── State ────────────────────────────────────────────────────────────────────
   const [tab, setTab]                     = useState('dna');
   const [caseStudy, setCaseStudy]         = useState('');
   const [caseLoading, setCaseLoading]     = useState(false);
   const [caseGenerated, setCaseGenerated] = useState(false);
-  // Choices where a higher-delta option existed (heuristic for "optimal" call)
-  const missedItems = useMemo(() => {
-    if (!choices?.length || !scenarios?.length) return [];
-    return choices
-      .filter(c => {
-        const sc = scenarios.find(s => s.id === c.scenarioId);
-        if (!sc?.choices) return false;
-        const chosen = sc.choices.find(ch => ch.id === c.choiceId);
-        const best   = sc.choices.reduce((a, b) => b.delta > a.delta ? b : a);
-        return chosen && best && chosen.id !== best.id;
-      })
-      .slice(0, 5)
-      .map(c => {
-        const sc   = scenarios.find(s => s.id === c.scenarioId);
-        const best = sc.choices.reduce((a, b) => b.delta > a.delta ? b : a);
-        return {
-          title:     sc.title,
-          context:   toContextSnippet(sc.narration),
-          youChose:  sc.choices.find(ch => ch.id === c.choiceId)?.text,
-          bestWas:   best.text,
-          principle: sc.consequences[best.id]?.principle,
-          lesson:    sc.consequences[best.id]?.lesson,
-        };
-      });
-  }, [choices, scenarios]);
 
+  // ── What You Missed ──────────────────────────────────────────────────────────
+  const missedItems = useMemo(() => {
+    const raw = buildMissedItems(choices, scenarios, uiTasks);
+    const max = 170;
+    return raw.map(item => ({
+      ...item,
+      context: item.context.length > max ? `${item.context.slice(0, max)}...` : item.context,
+    }));
+  }, [choices, scenarios, uiTasks]);
+
+  // ── Portfolio case study ─────────────────────────────────────────────────────
   const generateCaseStudy = async () => {
     if (caseGenerated || caseLoading || !LLM_READY) return;
     setCaseLoading(true);
 
-    // Summarise DNA for prompt
     const dnaSummary = Object.entries(DNA_TRAITS).map(([key, config]) => {
       const val = dna?.[key] ?? 50;
       return `${config.label}: ${getDNALabel(key, val)} (${val}/100)`;
@@ -73,12 +79,10 @@ export default function FinalScreen({
 
 Their results:
 - Final Score: ${clamped}/${maxScore} (${pct}%)
-- Level Achieved: ${ending.title}
 - Designer DNA: ${dnaSummary}
-- Earned Titles: ${titles?.join(', ') || 'None yet'}
 - Key principles encountered: ${topPrinciples}
 
-Write a 3-paragraph portfolio case study in first person as if the designer is writing it for LinkedIn or their portfolio. 
+Write a 3-paragraph portfolio case study in first person as if the designer is writing it for LinkedIn or their portfolio.
 
 Paragraph 1: What Casework is and what challenge the player tackled (2-3 sentences)
 Paragraph 2: Key decisions made and design thinking demonstrated based on their DNA profile (3-4 sentences — be specific to their DNA scores, not generic)
@@ -101,11 +105,12 @@ Write in a professional but human tone. No bullet points. No headers. Just three
     }
   };
 
+  // ── Share ────────────────────────────────────────────────────────────────────
   const handleShare = () => {
     const dnaParts = Object.entries(DNA_TRAITS).map(([key, config]) => {
       return `${config.label}: ${getDNALabel(key, dna?.[key] ?? 50)}`;
     }).join(' | ');
-    const text = `I just completed Casework and earned "${ending.title}" with ${clamped}/${maxScore} Design Rep!\n\nMy Designer DNA: ${dnaParts}\n\nTitles earned: ${titles?.join(', ') || 'None'}\n\n#Casework #UXDesign #ProductDesign`;
+    const text = `I just completed Casework with ${clamped}/${maxScore} Design Rep!\n\nMy Designer DNA: ${dnaParts}\n\n#Casework #UXDesign #ProductDesign`;
     if (navigator.share) {
       navigator.share({ title: 'My Casework Results', text }).catch(() => {});
     } else {
@@ -119,6 +124,7 @@ Write in a professional but human tone. No bullet points. No headers. Just three
     }
   };
 
+  // ── Render ───────────────────────────────────────────────────────────────────
   return (
     <div className="final-screen">
       <div className="final-screen__inner">
@@ -127,7 +133,9 @@ Write in a professional but human tone. No bullet points. No headers. Just three
         <div className="final-screen__header">
           <div className="final-screen__eyebrow">Game Complete</div>
           <h1 className="final-screen__title" style={{ color: ending.color }}>{ending.title}</h1>
-          <p className="final-screen__subtitle">"{ending.subtitle}"</p>
+          {ending.subtitle && (
+            <p className="final-screen__subtitle">"{ending.subtitle}"</p>
+          )}
         </div>
 
         {/* Score */}
@@ -143,10 +151,12 @@ Write in a professional but human tone. No bullet points. No headers. Just three
           <div className="final-screen__bar-fill" style={{ width: `${pct}%`, background: ending.color }} />
         </div>
 
-        {/* Story */}
-        <div className="final-screen__story">
-          <p>{ending.description}</p>
-        </div>
+        {/* Story — only render when there's content to avoid empty rectangle */}
+        {ending.description && (
+          <div className="final-screen__story">
+            <p>{ending.description}</p>
+          </div>
+        )}
 
         {/* Tabs */}
         <div className="final-tabs" role="tablist">
@@ -183,14 +193,6 @@ Write in a professional but human tone. No bullet points. No headers. Just three
                 );
               })}
             </div>
-            {titles && titles.length > 0 && (
-              <div className="final-titles" style={{ marginTop: 20 }}>
-                <div className="final-titles__label">Earned Titles</div>
-                <div className="final-titles__row">
-                  {titles.map(t => <span key={t} className="title-tag">{t}</span>)}
-                </div>
-              </div>
-            )}
           </div>
         )}
 
@@ -204,7 +206,7 @@ Write in a professional but human tone. No bullet points. No headers. Just three
               </div>
             ) : (
               <>
-                <p className="missed-intro">These scenarios had a better call available. Here's what you could have done differently:</p>
+                <p className="missed-intro">These scenarios had a better call available — including UI tasks where you didn&apos;t ace it. Here&apos;s what you could have done differently:</p>
                 <div className="missed-list">
                   {missedItems.map((item, i) => (
                     <div key={i} className="missed-item">
@@ -284,6 +286,13 @@ Write in a professional but human tone. No bullet points. No headers. Just three
         )}
 
         {/* Actions */}
+        <FeedbackCard
+          variant="full"
+          scope="track"
+          trackId={trackId}
+          trackLabel={trackLabel}
+        />
+
         <div className="final-screen__actions">
           <button className="btn btn-primary" onClick={onPlayAgain}>Play Again</button>
           <button className="btn btn-ghost" onClick={handleShare}>Share DNA Report ↗</button>

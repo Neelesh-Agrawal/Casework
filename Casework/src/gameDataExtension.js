@@ -669,9 +669,9 @@ export const getUpdatedEnding = (score) => {
 };
 
 // ─── UI TASKS ─────────────────────────────────────────────────────────────────
-// These replace a standard scenario — triggered by scenarioId match in ScenarioScreen
+// Bonus interactive tasks — one per chapter, played after all narrative scenarios
 export const UI_TASKS = {
-  // Chapter 4 – Fitts's Law (replaces a scenario slot, scenarioId = 'uitask_ch4')
+  // Chapter 4 – Fitts's Law
   uitask_ch4: {
     id: 'uitask_ch4',
     chapter: 4,

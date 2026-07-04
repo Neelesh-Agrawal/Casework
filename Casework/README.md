@@ -1,6 +1,6 @@
 # Casework (Day 23)
 
-A design-learning game built with **React** and **Vite**: scenarios, consequences, progress, and optional **Groq** or **Anthropic** API features (AI critic, portfolio text).
+A design-learning game built with **React** and **Vite**: scenarios, consequences, progress, and optional **Groq** or **Anthropic** API for the end-of-game portfolio case study.
 
 ## Setup
 
@@ -16,6 +16,23 @@ npm run dev
 - **`npm run lint`** — ESLint  
 
 Secrets belong in **`.env`** (gitignored). Use **`.env.example`** as a template. Variables prefixed with `VITE_` are embedded in the client build; do not treat them as server-only secrets if you deploy publicly.
+
+## Sharing the site publicly (API limits)
+
+AI features (mentor feedback, case study generator) call **Groq or Anthropic from each visitor's browser** using your API key. If many people play at once, you will hit rate limits quickly — and anyone can extract the key from the built JavaScript.
+
+**Recommended for demos you send to others:**
+
+1. On your hosting platform (Vercel, Netlify, etc.), set environment variable:
+   ```
+   VITE_ENABLE_LLM=false
+   ```
+2. **Do not** set `VITE_GROQ_API_KEY` or `VITE_ANTHROPIC_API_KEY` in production — only in local `.env` for your own testing.
+3. Redeploy.
+
+The game is fully playable without AI. Players still get scenarios, consequences, lessons, and principles — only the optional end-of-game portfolio generator is skipped.
+
+For a production app with many users, you would need a **backend proxy** that holds the API key server-side and rate-limits per user (not included in this project).
 
 ---
 

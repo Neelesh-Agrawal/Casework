@@ -1,7 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { createMessage, hasLlmKey } from '../lib/llm';
-
-const LLM_READY = hasLlmKey();
+import React, { useState, useEffect } from 'react';
 
 const PRINCIPLE_ICONS = {
   "Hick's Law": '⚡', "Hick's Law + Form Design": '⚡',
@@ -61,106 +58,139 @@ function getBadge(delta) {
   return { label: 'Painful Lesson', cls: 'bad' };
 }
 
+function truncate(text, maxWords = 28) {
+  if (!text) return '';
+  const words = text.split(' ');
+  if (words.length <= maxWords) return text;
+  return words.slice(0, maxWords).join(' ') + '…';
+}
+
+function ComparisonReveal({ scenario, choiceId, consequences, uiTask }) {
+  if (uiTask || !scenario?.choices) return null;
+
+  const yourChoice = scenario.choices.find(c => c.id === choiceId);
+  const bestChoice = [...scenario.choices].sort((a, b) => b.delta - a.delta)[0];
+  const isAlreadyBest = yourChoice?.id === bestChoice?.id;
+
+  if (!yourChoice) return null;
+
+  const yourConsequence = consequences?.[choiceId];
+  const bestConsequence = consequences?.[bestChoice?.id];
+  const yourDelta = yourChoice.delta;
+
+  return (
+    <div style={{
+      borderRadius: 12,
+      overflow: 'hidden',
+      border: '1px solid rgba(255,255,255,0.10)',
+      marginBottom: 20,
+    }}>
+      <div style={{
+        background: 'rgba(255,255,255,0.05)',
+        borderBottom: '1px solid rgba(255,255,255,0.08)',
+        padding: '10px 16px',
+        fontSize: 11,
+        fontWeight: 700,
+        letterSpacing: '0.08em',
+        color: 'rgba(255,255,255,0.45)',
+        textTransform: 'uppercase',
+      }}>
+        {isAlreadyBest ? '✓ Decision Breakdown — You picked the best call' : '↕ Decision Breakdown'}
+      </div>
+
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: isAlreadyBest ? '1fr' : '1fr 1fr',
+        gap: 0,
+      }}>
+        <div style={{
+          padding: '14px 16px',
+          borderRight: isAlreadyBest ? 'none' : '1px solid rgba(255,255,255,0.08)',
+          background: yourDelta < 0
+            ? 'rgba(239,68,68,0.06)'
+            : yourDelta >= 15
+            ? 'rgba(16,185,129,0.06)'
+            : 'rgba(245,158,11,0.06)',
+        }}>
+          <div style={{
+            fontSize: 10,
+            fontWeight: 700,
+            letterSpacing: '0.07em',
+            marginBottom: 8,
+            color: yourDelta < 0 ? '#EF4444' : yourDelta >= 15 ? '#10B981' : '#F59E0B',
+          }}>
+            {yourDelta < 0 ? '✗ YOUR CHOICE' : yourDelta >= 15 ? '✓ YOUR CHOICE' : '~ YOUR CHOICE'}
+          </div>
+          <p style={{
+            margin: '0 0 10px',
+            fontSize: 13,
+            lineHeight: 1.45,
+            color: 'rgba(255,255,255,0.85)',
+            fontStyle: 'italic',
+          }}>
+            "{yourChoice.text}"
+          </p>
+          {yourConsequence?.lesson && (
+            <p style={{
+              margin: 0,
+              fontSize: 12,
+              lineHeight: 1.5,
+              color: 'rgba(255,255,255,0.55)',
+            }}>
+              {truncate(yourConsequence.lesson, 24)}
+            </p>
+          )}
+        </div>
+
+        {!isAlreadyBest && bestChoice && (
+          <div style={{
+            padding: '14px 16px',
+            background: 'rgba(16,185,129,0.06)',
+          }}>
+            <div style={{
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: '0.07em',
+              color: '#10B981',
+              marginBottom: 8,
+            }}>
+              ✓ BEST CALL
+            </div>
+            <p style={{
+              margin: '0 0 10px',
+              fontSize: 13,
+              lineHeight: 1.45,
+              color: 'rgba(255,255,255,0.85)',
+              fontStyle: 'italic',
+            }}>
+              "{bestChoice.text}"
+            </p>
+            {bestConsequence?.lesson && (
+              <p style={{
+                margin: 0,
+                fontSize: 12,
+                lineHeight: 1.5,
+                color: 'rgba(255,255,255,0.55)',
+              }}>
+                {truncate(bestConsequence.lesson, 24)}
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function ConsequenceScreen({
   scenario, consequence, choiceId, delta, onNext, uiTask,
 }) {
-  const [deltaVisible, setDeltaVisible]   = useState(false);
-  const [criticText, setCriticText]       = useState('');
-  const [criticLoading, setCriticLoading] = useState(true);
-  const [defendText, setDefendText]       = useState('');
-  const [aiReply, setAiReply]             = useState('');
-  const [replyLoading, setReplyLoading]   = useState(false);
-  const [defended, setDefended]           = useState(false);
-  const [defError, setDefError]           = useState('');
-  const textareaRef = useRef(null);
+  const [deltaVisible, setDeltaVisible] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => setDeltaVisible(true), 200);
     return () => clearTimeout(t);
   }, []);
-
-  // AI Critic — fetch after mount (initial criticLoading is true; key on parent resets state per scenario)
-  useEffect(() => {
-    let cancelled = false;
-
-    async function fetchCritic() {
-      if (!LLM_READY) {
-        if (!cancelled) { setCriticText(''); setCriticLoading(false); }
-        return;
-      }
-      try {
-        const choiceText = uiTask
-          ? `Selected option ${choiceId} in the interactive task`
-          : scenario?.choices?.find(c => c.id === choiceId)?.text || choiceId;
-
-        const prompt = `You are a senior UX design mentor reviewing a student's decision in Casework, a design learning game.
-
-Scenario: "${uiTask ? uiTask.title : scenario?.title}"
-The student chose: "${choiceText}"
-Outcome: ${consequence.story}
-Design principle: ${consequence.principle}
-
-Give a short mentor-style analysis in exactly 3 lines (no bullet points, no headers, no numbering):
-Line 1: What this choice signals about their design thinking (1 sentence, max 20 words)
-Line 2: When this choice would actually be the right call (1 sentence, max 20 words)
-Line 3: The key trade-off they accepted (1 sentence, max 20 words)
-
-Be specific to this scenario, direct, and honest. Do not repeat the outcome text.`;
-
-        const text = await createMessage(prompt, 300);
-        if (!cancelled) setCriticText(text);
-      } catch {
-        if (!cancelled) setCriticText('');
-      } finally {
-        if (!cancelled) setCriticLoading(false);
-      }
-    }
-
-    fetchCritic();
-    return () => { cancelled = true; };
-  }, [scenario?.id, scenario?.title, scenario?.choices, choiceId, uiTask, consequence.story, consequence.principle]);
-
-  const handleDefend = async () => {
-    if (defendText.trim().length < 5) {
-      setDefError('Write at least a few words to continue.');
-      textareaRef.current?.focus();
-      return;
-    }
-    setDefError('');
-    setReplyLoading(true);
-
-    if (!LLM_READY) {
-      // No API key — allow proceed without AI response
-      setAiReply('');
-      setDefended(true);
-      setReplyLoading(false);
-      return;
-    }
-
-    try {
-      const choiceText = uiTask
-        ? `Selected option ${choiceId} in the interactive task`
-        : scenario?.choices?.find(c => c.id === choiceId)?.text || choiceId;
-
-      const prompt = `You are a warm but honest senior UX design mentor in Casework.
-
-Scenario: "${uiTask ? uiTask.title : scenario?.title}"
-Student chose: "${choiceText}"
-Actual outcome: ${consequence.story}
-Design principle: ${consequence.principle}
-Student's reasoning: "${defendText}"
-
-Respond in 2-3 sentences. First acknowledge what's valid in their reasoning. Then point out the most important thing they missed. End with one actionable insight they can carry forward. Max 80 words. No bullet points. Warm but direct tone.`;
-
-      const text = await createMessage(prompt, 300);
-      setAiReply(text);
-    } catch {
-      setAiReply('');
-    } finally {
-      setReplyLoading(false);
-      setDefended(true);
-    }
-  };
 
   const badge   = getBadge(delta);
   const icon    = PRINCIPLE_ICONS[consequence.principle] || '💡';
@@ -172,7 +202,6 @@ Respond in 2-3 sentences. First acknowledge what's valid in their reasoning. The
     <div className="consequence">
       <div className="consequence__inner">
 
-        {/* Verdict */}
         <div className="consequence__verdict">
           <span className={`consequence__badge ${badge.cls}`}>{badge.label}</span>
           <span
@@ -181,7 +210,6 @@ Respond in 2-3 sentences. First acknowledge what's valid in their reasoning. The
           >{deltaSign} Rep</span>
         </div>
 
-        {/* Business Metrics */}
         <div className="consequence__metrics">
           <div className="metric-pill">
             <span className="metric-pill__label">Conversion</span>
@@ -197,14 +225,19 @@ Respond in 2-3 sentences. First acknowledge what's valid in their reasoning. The
           </div>
         </div>
 
-        {/* Story */}
         <div className="consequence__card story">
           <div className="consequence__card-label">What happened</div>
           <p className="consequence__story">{consequence.story}</p>
           <p className="consequence__lesson"><strong>Lesson: </strong>{consequence.lesson}</p>
         </div>
 
-        {/* Principle */}
+        <ComparisonReveal
+          scenario={scenario}
+          choiceId={choiceId}
+          consequences={scenario?.consequences}
+          uiTask={uiTask}
+        />
+
         <div className="consequence__card principle">
           <div className="consequence__card-label">Design Principle</div>
           <div className="principle-box">
@@ -216,71 +249,8 @@ Respond in 2-3 sentences. First acknowledge what's valid in their reasoning. The
           </div>
         </div>
 
-        {/* AI Critic */}
-        <div className="consequence__card critic">
-          <div className="consequence__card-label">🤖 AI Design Critic</div>
-          {!LLM_READY ? (
-            <p className="critic-line muted">Add <code>VITE_GROQ_API_KEY</code> (recommended) or <code>VITE_ANTHROPIC_API_KEY</code> to <code>.env</code> to enable AI feedback.</p>
-          ) : criticLoading ? (
-            <div className="critic-loading">
-              <span className="critic-dot" /><span className="critic-dot" /><span className="critic-dot" />
-              <span className="critic-loading-text">Analysing your decision…</span>
-            </div>
-          ) : criticText ? (
-            <div className="critic-lines">
-              {criticText.split('\n').filter(l => l.trim()).map((line, i) => (
-                <p key={i} className="critic-line">{line}</p>
-              ))}
-            </div>
-          ) : (
-            <p className="critic-line muted">Could not load analysis. Continue below.</p>
-          )}
-        </div>
-
-        {/* Defend */}
-        {!defended ? (
-          <div className="consequence__card defend">
-            <div className="consequence__card-label">🧑‍💻 Defend Your Decision</div>
-            <p className="defend-prompt">Optional: explain why you chose this to get personalised mentor feedback — or skip and use Next.</p>
-            <textarea
-              ref={textareaRef}
-              className="defend-textarea"
-              placeholder="I chose this because..."
-              value={defendText}
-              onChange={e => { setDefendText(e.target.value); setDefError(''); }}
-              rows={3}
-              aria-label="Defend your design decision"
-            />
-            {defError && <p className="defend-error" role="alert">{defError}</p>}
-            <button
-              className="btn btn-defend"
-              onClick={handleDefend}
-              disabled={replyLoading}
-            >
-              {replyLoading ? 'Getting feedback…' : 'Get Feedback →'}
-            </button>
-          </div>
-        ) : (
-          <div className="consequence__card ai-reply">
-            <div className="consequence__card-label">💬 Mentor Response</div>
-            <p className="defend-user-text">You said: <em>"{defendText}"</em></p>
-            {aiReply ? (
-              <p className="ai-reply-text">{aiReply}</p>
-            ) : (
-              <p className="ai-reply-text muted">
-                {LLM_READY ? "Couldn't reach mentor. Keep your reasoning in mind." : "Add VITE_GROQ_API_KEY (or Anthropic key) in .env for personalised feedback."}
-              </p>
-            )}
-          </div>
-        )}
-
-        {/* Next */}
         <div className="consequence__actions">
-          <button
-            type="button"
-            className="btn btn-next"
-            onClick={onNext}
-          >
+          <button type="button" className="btn btn-next" onClick={onNext}>
             Next →
           </button>
         </div>
