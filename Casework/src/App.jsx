@@ -39,6 +39,7 @@ import {
   getTotalPlaySlots,
   buildMissedItems,
 } from './lib/uiTasks';
+import { prepareResumeState } from './lib/resumeState';
 
 // ── Constants ──
 const SCREEN = {
@@ -221,6 +222,17 @@ export default function App() {
 
   const clampScore = useCallback((s) => Math.min(Math.max(s, 0), maxScore), [maxScore]);
 
+  // Recover from invalid scenario slot (e.g. legacy saves) — avoid blank screen
+  useEffect(() => {
+    if (!state || !trackData || state.screen !== SCREEN.SCENARIO) return;
+    if (currentScenario || isOnUITask) return;
+    setState(prev => prev ? ({
+      ...prev,
+      screen: SCREEN.CHAPTER_SUMMARY,
+      scenarioIndex: Math.max(0, currentChapterTotal - 1),
+    }) : prev);
+  }, [state, trackData, currentScenario, isOnUITask, currentChapterTotal]);
+
   // ── Handlers ─────────────────────────────────────────────────────────────────
   const handleTrackSelect = useCallback((trackId) => {
     setActiveTrack(trackId);
@@ -253,27 +265,30 @@ export default function App() {
 
   const handleResume = useCallback(() => {
     if (!savedGame) return;
-    setState(prev => ({
+    const prepared = prepareResumeState(savedGame, getTrackData(activeTrack));
+    setState({
       ...getInitialGameState(activeTrack),
-      ...savedGame,
-      activeUITask: savedGame.activeUITask || null,
-      screen:  SCREEN.SCENARIO,
+      ...prepared,
       started: true,
       activeTrack,
-    }));
+    });
     setSavedGame(null);
   }, [savedGame, activeTrack]);
 
   const handleViewFinalReport = useCallback(() => {
     if (!savedGame) return;
-    setState(prev => ({
+    const prepared = prepareResumeState(
+      { ...savedGame, screen: SCREEN.FINAL },
+      getTrackData(activeTrack),
+    );
+    setState({
       ...getInitialGameState(activeTrack),
-      ...savedGame,
-      activeUITask: null,
+      ...prepared,
       screen: SCREEN.FINAL,
+      activeUITask: null,
       started: true,
       activeTrack,
-    }));
+    });
     setSavedGame(null);
   }, [savedGame, activeTrack]);
 
@@ -342,7 +357,7 @@ export default function App() {
       setState(prev => prev ? ({
         ...prev,
         screen:        SCREEN.CHAPTER_SUMMARY,
-        scenarioIndex: nextIndex,
+        scenarioIndex: Math.max(0, currentChapterTotal - 1),
         activeUITask:  null,
       }) : prev);
     } else {
@@ -385,9 +400,15 @@ export default function App() {
   }, [activeTrack, clearSaveForTrack]);
 
   // ── Effective consequence for ConsequenceScreen ──────────────────────────────
+  const consequenceSlot = state?.screen === SCREEN.CONSEQUENCE
+    ? resolveChapterSlot(state.scenarioIndex ?? 0, narrativeChapterScenarios, chapterUITask)
+    : chapterSlot;
+  const consequenceScenario = consequenceSlot.type === 'narrative' ? consequenceSlot.scenario : null;
+
   const effectiveConsequence = state?.activeUITask
     ? state.activeUITask.consequences?.[state.selectedChoice]
-    : currentScenario?.consequences?.[state?.selectedChoice];
+    : consequenceScenario?.consequences?.[state?.selectedChoice]
+      ?? currentScenario?.consequences?.[state?.selectedChoice];
 
   const showScoreBar = state &&
     state.screen !== SCREEN.SPLASH &&
@@ -489,7 +510,7 @@ export default function App() {
       {state.screen === SCREEN.CONSEQUENCE && effectiveConsequence && (
         <ConsequenceScreen
           key={`con-${state.chapter}-${state.scenarioIndex}-${state.selectedChoice}`}
-          scenario={state.activeUITask ? null : currentScenario}
+          scenario={state.activeUITask ? null : consequenceScenario}
           consequence={effectiveConsequence}
           choiceId={state.selectedChoice}
           delta={state.lastDelta}

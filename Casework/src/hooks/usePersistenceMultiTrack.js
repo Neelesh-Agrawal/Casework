@@ -1,6 +1,8 @@
 // Multi-track persistence — each track has its own localStorage slot.
 // Track 2 (v1) re-uses the original key so existing saves survive unchanged.
 
+import { buildGameSavePayload } from '../lib/resumeState';
+
 const SAVE_KEYS = {
   1: 'casework_track1_save',
   2: 'designquest_save_v1', // matches original usePersistence.js SAVE_KEY — preserves existing saves
@@ -15,20 +17,7 @@ function keyFor(trackId) {
 
 export function saveTrackGame(trackId, state) {
   try {
-    localStorage.setItem(keyFor(trackId), JSON.stringify({
-      score:         state.score,
-      chapter:       state.chapter,
-      scenarioIndex: state.scenarioIndex,
-      screen:        state.screen,
-      completed:     state.screen === 'FINAL',
-      principles:    state.principles,
-      chapterScores: state.chapterScores,
-      choices:       state.choices || [],
-      dna:           state.dna || {},
-      titles:        state.titles || [],
-      level:         state.level || 'Junior Designer',
-      savedAt:       Date.now(),
-    }));
+    localStorage.setItem(keyFor(trackId), JSON.stringify(buildGameSavePayload(state)));
   } catch { void 0; }
 }
 

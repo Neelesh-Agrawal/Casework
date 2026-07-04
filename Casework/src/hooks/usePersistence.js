@@ -1,22 +1,10 @@
+import { buildGameSavePayload } from '../lib/resumeState';
+
 const SAVE_KEY = 'designquest_save_v1';
 
 export function saveGame(state) {
   try {
-    const saveData = {
-      score:         state.score,
-      chapter:       state.chapter,
-      scenarioIndex: state.scenarioIndex,
-      screen:        state.screen,
-      completed:     state.screen === 'FINAL',
-      principles:    state.principles,
-      chapterScores: state.chapterScores,
-      choices:       state.choices || [],
-      dna:           state.dna || {},
-      titles:        state.titles || [],
-      level:         state.level || 'Junior Designer',
-      savedAt:       Date.now(),
-    };
-    localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
+    localStorage.setItem(SAVE_KEY, JSON.stringify(buildGameSavePayload(state)));
   } catch {
     void 0;
   }
