@@ -1,5 +1,4 @@
 import React from 'react';
-import { loadAllFeedback } from '../hooks/useChapterFeedback';
 
 const TRACKS = [
   {
@@ -77,9 +76,7 @@ function getCtaLabel(track, save, hasSave, isCompleted) {
   return 'Start →';
 }
 
-export default function TrackSelectScreen({ onSelectTrack, onViewFeedback, savedTracks = {} }) {
-  const feedbackCount = loadAllFeedback().length;
-
+export default function TrackSelectScreen({ onSelectTrack, savedTracks = {} }) {
   return (
     <div className="track-select">
       <div className="splash__bg" aria-hidden="true" />
@@ -130,12 +127,6 @@ export default function TrackSelectScreen({ onSelectTrack, onViewFeedback, saved
       </div>
 
       <p className="track-select__note">Progress is saved separately for each track. Start any track at any time.</p>
-
-      {onViewFeedback && (
-        <button type="button" className="track-select__feedback-link" onClick={onViewFeedback}>
-          View player feedback{feedbackCount > 0 ? ` (${feedbackCount})` : ''}
-        </button>
-      )}
     </div>
   );
 }

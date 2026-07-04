@@ -2,29 +2,7 @@ const STORAGE_KEY = 'casework_chapter_feedback';
 
 export const RATING_LABELS = ['', 'Rough', 'Okay', 'Good', 'Great', 'Loved it'];
 
-export function loadAllFeedback() {
-  try {
-    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    return Array.isArray(raw) ? raw : [];
-  } catch {
-    return [];
-  }
-}
-
-export function clearAllFeedback() {
-  try {
-    localStorage.removeItem(STORAGE_KEY);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-export function exportFeedbackJson() {
-  return JSON.stringify(loadAllFeedback(), null, 2);
-}
-
-export function saveChapterFeedbackLocally(entry) {
+function saveChapterFeedbackLocally(entry) {
   try {
     const existing = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     const record = { ...entry, savedAt: entry.savedAt || Date.now() };

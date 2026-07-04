@@ -30,7 +30,6 @@ import ScenarioScreen    from './components/ScenarioScreen';
 import ConsequenceScreen from './components/ConsequenceScreen';
 import ChapterSummary    from './components/ChapterSummary';
 import FinalScreen       from './components/FinalScreen';
-import FeedbackViewerScreen from './components/FeedbackViewerScreen';
 import {
   getChapterUITask,
   resolveChapterSlot,
@@ -44,7 +43,6 @@ import { prepareResumeState } from './lib/resumeState';
 // ── Constants ──
 const SCREEN = {
   TRACK_SELECT:    'TRACK_SELECT',
-  FEEDBACK_VIEW:   'FEEDBACK_VIEW',
   SPLASH:          'SPLASH',
   REFRESH_GUARD:   'REFRESH_GUARD',
   CHAPTER_INTRO:   'CHAPTER_INTRO',
@@ -417,17 +415,10 @@ export default function App() {
   // ── Render ───────────────────────────────────────────────────────────────────
 
   // Track select is handled at the top level, before any game state
-  if (topScreen === SCREEN.FEEDBACK_VIEW) {
-    return (
-      <FeedbackViewerScreen onBack={() => setTopScreen(SCREEN.TRACK_SELECT)} />
-    );
-  }
-
   if (topScreen === SCREEN.TRACK_SELECT) {
     return (
       <TrackSelectScreen
         onSelectTrack={handleTrackSelect}
-        onViewFeedback={() => setTopScreen(SCREEN.FEEDBACK_VIEW)}
         savedTracks={loadAllTrackSaves()}
       />
     );
