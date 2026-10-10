@@ -23,7 +23,26 @@ export default defineConfig([
       },
     },
     rules: {
-      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]', destructuredArrayIgnorePattern: '^[A-Z]' }],
+    },
+  },
+  {
+    // Vercel functions and build config run in Node.
+    files: ['api/**/*.js', 'vite.config.js', 'scripts/**/*.{js,mjs}'],
+    languageOptions: { globals: globals.node },
+  },
+  {
+    // Mock registries map content keys to components; they're static and don't need fast refresh.
+    files: ['src/v2/ui/mocks.jsx', 'src/v2/ui/mocks/**/*.jsx'],
+    rules: { 'react-refresh/only-export-components': 'off' },
+  },
+  {
+    // React Three Fiber: mutating the camera / DOM nodes inside useFrame is the intended pattern.
+    files: ['src/v2/scene/**/*.jsx', 'src/v2/film/**/*.jsx'],
+    rules: {
+      'react-hooks/immutability': 'off',
+      'react-hooks/refs': 'off',
+      'react-refresh/only-export-components': 'off',
     },
   },
 ])

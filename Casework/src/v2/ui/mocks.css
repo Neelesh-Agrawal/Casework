@@ -1,0 +1,105 @@
+/* Mock product UIs used by hands-on cases (light surfaces) — ported from v2. */
+/* ─── Mock UIs (light product surfaces inside the dark game) ─────────────── */
+.mock {
+  --m-ink: #0F172A; --m-ink-2: #475569; --m-line: #E2E8F0; --m-bg: #FFFFFF; --m-brand: #FF6B2C;
+  font-family: var(--ui); color: var(--m-ink); background: var(--m-bg);
+  border-radius: 14px; box-shadow: 0 30px 60px -20px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06);
+  user-select: none; -webkit-user-select: none;
+}
+.mock-signup { width: 100%; max-width: 360px; padding: 28px 26px 24px; display: flex; flex-direction: column; gap: 12px; }
+.mock-logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 16px; letter-spacing: -0.02em; }
+.mock-logo i { width: 18px; height: 18px; border-radius: 4px; background: var(--m-brand); }
+.mock-h { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; margin-top: 6px; }
+.mock-sub { font-size: 12px; color: var(--m-ink-2); margin-top: -6px; }
+.mock-google { height: 40px; border-radius: 8px; border: 1px solid var(--m-line); display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 12px; font-weight: 600; }
+.mock-google i { width: 14px; height: 14px; border-radius: 100px; background: conic-gradient(#EA4335 0 25%, #FBBC05 0 50%, #34A853 0 75%, #4285F4 0); }
+.mock-or { display: flex; align-items: center; gap: 10px; font-size: 12px; color: #94A3B8; }
+.mock-or::before, .mock-or::after { content: ''; flex: 1; height: 1px; background: var(--m-line); }
+.mock-input { height: 40px; border-radius: 8px; border: 1px solid #CBD5E1; padding: 0 12px; display: flex; align-items: center; font-size: 14px; }
+.mock-input--ph { color: #94A3B8; }
+.mock-input--err { border-color: #EF4444; }
+.mock-err { font-size: 12px; color: #DC2626; margin-top: -6px; }
+.mock-terms { display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--m-ink-2); }
+.mock-terms i { width: 14px; height: 14px; border-radius: 4px; border: 1px solid #94A3B8; }
+.mock-terms u { color: var(--m-ink); }
+.mock-cta { height: 42px; border-radius: 8px; background: #EEF0F3; color: #B4BBC6; display: grid; place-items: center; font-size: 14px; font-weight: 600; }
+.mock-foot { text-align: center; font-size: 12px; color: var(--m-ink-2); }
+.mock-foot b { color: var(--m-brand); font-weight: 600; }
+
+.mock-dialog { width: 100%; max-width: 400px; margin: 0 auto; padding: 24px; }
+.mock-dialog__icon { width: 40px; height: 40px; border-radius: 12px; background: #FEF3C7; display: grid; place-items: center; font-size: 18px; }
+.mock-dialog__file { display: flex; align-items: center; gap: 10px; margin-top: 16px; padding: 10px 12px; border-radius: 8px; background: #F8FAFC; border: 1px solid var(--m-line); font-size: 12px; }
+.mock-dialog__file small { margin-left: auto; color: #DC2626; font-weight: 600; }
+.mock-dialog__h { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; margin-top: 16px; min-height: 28px; }
+.mock-dialog__p { font-size: 14px; color: var(--m-ink-2); margin-top: 6px; line-height: 1.55; min-height: 44px; }
+.mock-dialog__actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+.mock-btn { height: 36px; padding: 0 14px; border-radius: 8px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; }
+.mock-btn--ghost { color: var(--m-ink-2); }
+.mock-btn--primary { background: var(--m-ink); color: #fff; }
+.mock-empty { color: #CBD5E1; font-weight: 400; }
+
+.mock-cancel { width: 100%; max-width: 380px; padding: 26px 24px 22px; display: flex; flex-direction: column; gap: 12px; }
+.mock-plan { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-radius: 10px; background: #F8FAFC; border: 1px solid var(--m-line); font-size: 12px; }
+.mock-plan b { display: block; font-size: 14px; }
+.mock-plan span { color: var(--m-ink-2); font-size: 12px; }
+.mock-field-label { font-size: 12px; font-weight: 600; margin-bottom: -6px; }
+.mock-field-label span { color: #94A3B8; font-weight: 400; }
+.mock-select { height: 38px; border-radius: 8px; border: 1px solid #CBD5E1; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: #94A3B8; }
+.mock-check { display: flex; gap: 10px; align-items: flex-start; font-size: 12px; line-height: 1.4; }
+.mock-check__box { flex: none; width: 16px; height: 16px; border-radius: 4px; border: 1px solid #94A3B8; display: grid; place-items: center; font-size: 10px; font-style: normal; margin-top: 1px; }
+.mock-check__box--on { background: var(--m-brand); border-color: var(--m-brand); color: #fff; }
+.mock-note { font-size: 12px; color: var(--m-ink-2); }
+.mock-stay { height: 44px; border-radius: 10px; background: var(--m-brand); color: #fff; display: grid; place-items: center; font-size: 14px; font-weight: 700; box-shadow: 0 6px 16px -6px rgba(255, 107, 44, 0.6); }
+.mock-shame { text-align: center; font-size: 12px; color: #A0AEC0; text-decoration: underline; }
+.mock-phone { font-size: 12px; color: var(--m-ink-2); text-align: center; padding: 8px; border-radius: 8px; background: #F8FAFC; }
+
+/* Choice visuals — small animated product previews */
+.choice--visual { flex-wrap: wrap; }
+.choice__visual { flex-basis: 100%; order: -1; position: relative; z-index: 1; margin-bottom: 4px; }
+.mini-ui {
+  position: relative; height: 112px; border-radius: 10px; background: #fff; overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06); font-family: var(--ui);
+}
+.mini-layer { position: absolute; inset: 0; }
+/* 8s cycle: 0–50% waiting, 50–92% loaded, then reset */
+.mini-layer--wait { animation: phase-wait 8s infinite; }
+.mini-layer--loaded { animation: phase-loaded 8s infinite; }
+@keyframes phase-wait { 0%, 48% { opacity: 1; } 52%, 94% { opacity: 0; } 98%, 100% { opacity: 1; } }
+@keyframes phase-loaded { 0%, 48% { opacity: 0; } 52%, 94% { opacity: 1; } 98%, 100% { opacity: 0; } }
+.mini-ui--center { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }
+.mini-caption { font-size: 12px; color: #64748B; }
+.mini-spinner { width: 24px; height: 24px; border-radius: 100px; border: 3px solid #E2E8F0; border-top-color: #0F172A; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.mini-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 12px; align-content: center; }
+.mini-card { height: 80px; border-radius: 8px; border: 1px solid #E2E8F0; padding: 10px; display: flex; flex-direction: column; gap: 8px; position: relative; overflow: hidden; }
+.mini-card--plain { gap: 6px; }
+.mini-card b, .mini-real b { font-size: 16px; color: #0F172A; letter-spacing: -0.02em; }
+.mini-card svg { width: 100%; height: 24px; }
+.mini-card polyline { fill: none; stroke: #FF6B2C; stroke-width: 2; }
+.mini-sk { display: block; border-radius: 4px; background: linear-gradient(90deg, #EEF2F6 25%, #F8FAFC 50%, #EEF2F6 75%); background-size: 200% 100%; animation: shimmer 1.2s infinite linear; }
+.mini-sk--title { height: 8px; width: 60%; }
+.mini-sk--num { height: 18px; width: 80%; }
+.mini-real { position: absolute; inset: 0; padding: 10px; background: #fff; display: flex; flex-direction: column; gap: 6px; opacity: 0; animation: 8s infinite; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+/* Same 8s cycle as the others: cards fill in one by one during the wait, all reset at the end. */
+.mini-card:nth-child(1) .mini-real { animation-name: sk-in-1; }
+.mini-card:nth-child(2) .mini-real { animation-name: sk-in-2; }
+.mini-card:nth-child(3) .mini-real { animation-name: sk-in-3; }
+.mini-card:nth-child(4) .mini-real { animation-name: sk-in-4; }
+@keyframes sk-in-1 { 0%, 11% { opacity: 0; } 13%, 94% { opacity: 1; } 98%, 100% { opacity: 0; } }
+@keyframes sk-in-2 { 0%, 22% { opacity: 0; } 24%, 94% { opacity: 1; } 98%, 100% { opacity: 0; } }
+@keyframes sk-in-3 { 0%, 34% { opacity: 0; } 36%, 94% { opacity: 1; } 98%, 100% { opacity: 0; } }
+@keyframes sk-in-4 { 0%, 47% { opacity: 0; } 49%, 94% { opacity: 1; } 98%, 100% { opacity: 0; } }
+.mini-bar { width: 70%; height: 6px; border-radius: 100px; background: #E2E8F0; overflow: hidden; }
+.mini-bar span { display: block; height: 100%; background: #0F172A; border-radius: 100px; animation: fill-bar 8s infinite linear; }
+@keyframes fill-bar { 0% { width: 0; } 48% { width: 100%; } 100% { width: 100%; } }
+@media (max-width: 520px) { .mini-grid { grid-template-columns: repeat(2, 1fr); } .mini-card:nth-child(n+3) { display: none; } }
+
+
+/* Shared building blocks for track mocks */
+.m-page { width: 100%; padding: 20px; display: flex; flex-direction: column; text-align: left; }
+.m-box { padding: 12px 14px; border-radius: 10px; border: 1px solid #E5E7EB; }
+.m-table { width: 100%; border-collapse: collapse; font-size: 12px; color: #111827; }
+.m-table th { text-align: left; font-weight: 600; color: #6B7280; font-size: 12px; padding: 6px 4px; border-bottom: 1px solid #E5E7EB; }
+.m-table td { padding: 8px 4px; border-bottom: 1px solid #F3F4F6; }
+.m-chip { display: inline-flex; align-items: center; padding: 4px 8px; border-radius: 100px; border: 1px solid #E2E8F0; font-size: 12px; }

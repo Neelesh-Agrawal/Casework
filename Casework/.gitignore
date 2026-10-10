@@ -26,3 +26,12 @@ dist-ssr
 .env.local
 .env.*.local
 .
+
+# Intro film renders (large media, regenerate with film/*.py + film/record.mjs)
+film/out*/*.mp3
+film/out*/*.mp4
+film/out*/*.wav
+film/out*/*.log
+film/out*/stills/
+film/out*/check_*
+film/out*/ffmpeg-path.txt
