@@ -35,3 +35,4 @@ film/out*/*.log
 film/out*/stills/
 film/out*/check_*
 film/out*/ffmpeg-path.txt
+.vercel

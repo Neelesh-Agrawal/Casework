@@ -8,15 +8,69 @@ function readKey() {
   try { return sessionStorage.getItem(KEY) || ''; } catch { return ''; }
 }
 
-function Bars({ data, valueKey, labelKey, color = 'var(--ink)' }) {
-  const max = Math.max(1, ...data.map(d => d[valueKey]));
+const fmtDay = (iso, opts = { day: 'numeric', month: 'short' }) => new Date(`${iso}T12:00:00Z`).toLocaleDateString(undefined, opts);
+
+/**
+ * A 30-day bar chart with a scale, date labels and a hover card.
+ * series: [{ key, label, color }]; several series are drawn side by side per day.
+ */
+function DayChart({ days, series, summary }) {
+  const [hover, setHover] = useState(null);
+  const max = Math.max(1, ...days.flatMap(d => series.map(s => d[s.key])));
+  // A clean scale: 1, then even numbers, then multiples of 4, so the middle line is always a whole number.
+  const top = max <= 1 ? 1 : max <= 4 ? max + (max % 2) : Math.ceil(max / 4) * 4;
+  const ticks = top === 1 ? [1, 0] : [top, top / 2, 0];
+  const h = hover !== null ? days[hover] : null;
   return (
-    <div className="bars">
-      {data.map(d => (
-        <div key={d[labelKey]} className="bars__col" title={`${d[labelKey]}: ${d[valueKey]}`}>
-          <i style={{ height: `${(d[valueKey] / max) * 100}%`, background: color }} />
+    <div className="chart">
+      <div className="chart__head">
+        <div className="chart__summary">{summary}</div>
+        {series.length > 1 && (
+          <div className="chart__legend">
+            {series.map(s => <span key={s.key}><i style={{ background: s.color }} />{s.label}</span>)}
+          </div>
+        )}
+      </div>
+      <div className="chart__body">
+        <div className="chart__axis">{ticks.map(t => <span key={t}>{t}</span>)}</div>
+        <div className="chart__plot" onMouseLeave={() => setHover(null)}>
+          {ticks.map(t => <i key={t} className="chart__grid" style={{ bottom: `${(t / top) * 100}%` }} />)}
+          <div className="chart__cols">
+            {days.map((d, i) => (
+              <div
+                key={d.day}
+                className={`chart__col ${hover === i ? 'is-on' : ''}`}
+                onMouseEnter={() => setHover(i)}
+                onFocus={() => setHover(i)}
+                tabIndex={0}
+                aria-label={`${fmtDay(d.day)}: ${series.map(s => `${d[s.key]} ${s.label.toLowerCase()}`).join(', ')}`}
+              >
+                <div className="chart__bars">
+                  {series.map(s => (
+                    <i key={s.key} className={d[s.key] ? '' : 'is-zero'} style={{ height: `${(d[s.key] / top) * 100}%`, background: s.color }}>
+                      {series.length === 1 && d[s.key] > 0 && <b>{d[s.key]}</b>}
+                    </i>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+          {h && (
+            <div className="chart__tip" style={{ left: `${Math.min(85, Math.max(15, ((hover + 0.5) / days.length) * 100))}%` }}>
+              <b>{fmtDay(h.day, { weekday: 'short', day: 'numeric', month: 'short' })}</b>
+              {series.map(s => (
+                <span key={s.key}><i style={{ background: s.color }} />{s.label}: <b>{h[s.key]}</b></span>
+              ))}
+              {series.length === 2 && h[series[0].key] > 0 && (
+                <span className="muted">{Math.round((h[series[1].key] / h[series[0].key]) * 100)}% answered</span>
+              )}
+            </div>
+          )}
         </div>
-      ))}
+      </div>
+      <div className="chart__dates">
+        {days.map((d, i) => <span key={d.day}>{i % 5 === 0 || i === days.length - 1 ? fmtDay(d.day) : ''}</span>)}
+      </div>
     </div>
   );
 }
@@ -131,13 +185,23 @@ export default function AdminPage() {
 
       <div className="grid-2">
         <div className="card">
-          <span className="label">Visitors per day</span>
-          <Bars data={data.days} valueKey="visitors" labelKey="day" color="var(--orange)" />
+          <span className="label">Visitors per day · last 30 days</span>
+          <DayChart
+            days={data.days}
+            series={[{ key: 'visitors', label: 'Visitors', color: 'var(--orange)' }]}
+            summary={<><b>{visitors}</b> {visitors === 1 ? 'visitor' : 'visitors'} · <b>{data.days[data.days.length - 1]?.visitors || 0}</b> today · peak <b>{Math.max(0, ...data.days.map(d => d.visitors))}</b></>}
+          />
         </div>
         <div className="card">
           <span className="label">Daily case: opened vs answered</span>
-          <Bars data={data.days.map(d => ({ day: d.day, n: d.daily.views || 0 }))} valueKey="n" labelKey="day" color="var(--line-2)" />
-          <Bars data={data.days.map(d => ({ day: d.day, n: d.daily.answers || 0 }))} valueKey="n" labelKey="day" color="var(--blue)" />
+          <DayChart
+            days={data.days.map(d => ({ day: d.day, opened: d.daily.views || 0, answered: d.daily.answers || 0 }))}
+            series={[{ key: 'opened', label: 'Opened', color: 'var(--line-2)' }, { key: 'answered', label: 'Answered', color: 'var(--blue)' }]}
+            summary={(() => {
+              const opened = data.days.reduce((n, d) => n + (d.daily.views || 0), 0);
+              return <><b>{opened}</b> opened · <b>{dailyPlays}</b> answered{opened ? <> · <b>{Math.round((dailyPlays / opened) * 100)}%</b> finish</> : null}</>;
+            })()}
+          />
         </div>
       </div>
 
