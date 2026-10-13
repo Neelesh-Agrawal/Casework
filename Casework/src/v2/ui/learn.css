@@ -156,3 +156,10 @@
 .chapter-open__intro { font-size: 18px; line-height: 1.6; color: var(--ink-2); max-width: 56ch; margin-bottom: 16px; }
 .chapter-open__meta { font-size: 14px; color: var(--ink-3); }
 @media (max-width: 600px) { .chapter-open { padding: 56px 16px 64px; } }
+
+/* shown after a weaker pick */
+.strong-call { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 20px 22px; border-radius: var(--r-lg); background: var(--good-soft); border: 1.5px solid var(--good); }
+.strong-call .tag { font-size: 14px; padding: 4px 12px; margin-bottom: 4px; background: var(--good); color: #fff; }
+.strong-call__text { font-size: 18px; font-weight: 700; line-height: 1.45; }
+.strong-call .label { margin-top: 6px; color: var(--good); }
+.strong-call__story { font-size: 16px; line-height: 1.6; color: var(--ink); }

@@ -93,8 +93,9 @@ export default function Lesson({ caseData, kicker, priorAnswer, review = false, 
       {result && (
         <section className="lesson__learn" aria-label="What happened and why">
           <Outcome caseData={caseData} result={result} votes={votes} />
+          <StrongCall caseData={caseData} result={result} />
           <div className="principle rise rise-2">
-            <span className="label">The principle</span>
+            <span className="label">{result.verdict === 'strong' ? 'The principle' : 'Why the strong call works'}</span>
             <h2 className="display">{caseData.debrief.principle}</h2>
             <p>{caseData.debrief.insight}</p>
           </div>
@@ -159,6 +160,21 @@ function Choices({ caseData, result, votes, onChoose }) {
       </div>
       {!revealed && <p className="hint">Press 1 to {choices.length}, or tap an option</p>}
     </>
+  );
+}
+
+/** After a weaker pick, show the strong call and what it would have led to, so the lesson is complete. */
+function StrongCall({ caseData, result }) {
+  if (caseData.kind !== 'decision' || result.verdict === 'strong') return null;
+  const strong = caseData.choices.find(c => c.verdict === 'strong');
+  if (!strong) return null;
+  return (
+    <div className="strong-call rise rise-2">
+      <span className="tag tag--strong">The strong call</span>
+      <p className="strong-call__text">{strong.text}</p>
+      <span className="label">What would have happened</span>
+      <p className="strong-call__story">{strong.outcome}</p>
+    </div>
   );
 }
 
