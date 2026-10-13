@@ -144,7 +144,7 @@ function PinSync({ pins, pinEls }) {
 }
 
 // The phone greeter: a character standing in front of the office, bubble above her head.
-const GUIDE_AT = new Vector3(23, 0, 28);
+const GUIDE_AT = new Vector3(9, 0, 39); // open pavement below the office, bottom left on a phone
 const GUIDE_CLEARANCE = 96; // px reserved for the CTA bar
 function GuideSync({ guideEl, bubbleEl }) {
   const { camera, size } = useThree();
@@ -154,7 +154,7 @@ function GuideSync({ guideEl, bubbleEl }) {
     const b = bubbleEl.current;
     if (!el) return;
     v.copy(GUIDE_AT).project(camera);
-    const x = ((v.x + 1) / 2) * size.width;
+    const x = Math.max(48, Math.min(size.width - 48, ((v.x + 1) / 2) * size.width));
     // Keep her feet above the button bar at the bottom of the hero, whatever the screen height.
     const y = Math.min(((1 - v.y) / 2) * size.height, size.height - GUIDE_CLEARANCE);
     el.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -100%)`;
