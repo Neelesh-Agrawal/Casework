@@ -22,6 +22,46 @@ function useKeys(handler, active) {
   }, [handler, active]);
 }
 
+const TAP_SLOP = 10;        // px a finger can drift and still count as a tap
+const SCROLL_SETTLE = 300;  // ms after the page last scrolled before a tap counts
+
+/**
+ * On touch screens, a flick or a tap to stop a moving page can land as a click on whatever
+ * option is under the finger. Returns touch handlers for the options container and a check
+ * that says whether the click that just fired was a real tap.
+ */
+function useTapGuard() {
+  const lastScroll = useRef(0);
+  const touch = useRef(null);
+
+  useEffect(() => {
+    const onScroll = () => { lastScroll.current = performance.now(); };
+    window.addEventListener('scroll', onScroll, { passive: true, capture: true });
+    return () => window.removeEventListener('scroll', onScroll, { capture: true });
+  }, []);
+
+  const handlers = useMemo(() => ({
+    onTouchStart: (e) => {
+      const t = e.touches[0];
+      touch.current = { x: t.clientX, y: t.clientY, moved: false, scrolling: performance.now() - lastScroll.current < SCROLL_SETTLE };
+    },
+    onTouchMove: (e) => {
+      const s = touch.current;
+      const t = e.touches[0];
+      if (s && (Math.abs(t.clientX - s.x) > TAP_SLOP || Math.abs(t.clientY - s.y) > TAP_SLOP)) s.moved = true;
+    },
+  }), []);
+
+  const isRealTap = useCallback((e) => {
+    const s = touch.current;
+    touch.current = null;
+    if (!s || e.detail === 0) return true; // mouse, pen or keyboard
+    return !s.moved && !s.scrolling && performance.now() - lastScroll.current >= SCROLL_SETTLE;
+  }, []);
+
+  return [handlers, isRealTap];
+}
+
 /** Older cases without a written situation fall back to their scene lines. */
 function situationText(caseData) {
   if (caseData.situation) return caseData.situation;
@@ -119,6 +159,7 @@ function Choices({ caseData, result, votes, onChoose }) {
   const total = totalVotes(votes);
   const showPct = Boolean(votes) && total >= MIN_VOTES_TO_SHOW;
   const revealed = Boolean(result);
+  const [tapHandlers, isRealTap] = useTapGuard();
 
   const choose = useCallback((id) => {
     if (result) return;
@@ -133,14 +174,14 @@ function Choices({ caseData, result, votes, onChoose }) {
 
   return (
     <>
-      <div className="choices" role="group" aria-label="Your options">
+      <div className="choices" role="group" aria-label="Your options" {...(revealed ? {} : tapHandlers)}>
         {choices.map((c, i) => {
           const picked = result?.choiceId === c.id;
           const pct = showPct ? Math.round(((votes[c.id] || 0) / total) * 100) : null;
           const Visual = c.visual && CHOICE_VISUALS[c.visual];
           const cls = ['choice', revealed && 'is-revealed', picked && 'is-picked', revealed && !picked && c.verdict !== 'strong' && 'is-faded', revealed && `is-${c.verdict}`].filter(Boolean).join(' ');
           return (
-            <button type="button" key={c.id} className={cls} disabled={revealed} onClick={() => choose(c.id)}>
+            <button type="button" key={c.id} className={cls} disabled={revealed} onClick={(e) => { if (isRealTap(e)) choose(c.id); }}>
               {revealed && <span className="choice__fill" style={{ width: showPct ? `${pct}%` : '0%' }} />}
               {Visual && <span className="choice__visual" aria-hidden="true"><Visual /></span>}
               <span className="choice__key">{i + 1}</span>
