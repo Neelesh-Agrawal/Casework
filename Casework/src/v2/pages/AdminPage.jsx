@@ -330,9 +330,6 @@ export default function AdminPage() {
   const dailyAnswered = sum(daily, d => d.daily.answers);
   const peakHour = s.byHour.reduce((a, b) => (b.visits > a.visits ? b : a), s.byHour[0]);
   const peakDay = s.buckets.reduce((a, b) => (b.visitors > a.visitors ? b : a), s.buckets[0]);
-  const splitNote = data.newSince
-    ? `New vs returning is counted from ${fmtDay(data.newSince, { day: 'numeric', month: 'short', year: 'numeric' })}. Pick a range that starts on or after that day.`
-    : 'New vs returning starts counting with this update. Check back after a few visits.';
 
   return (
     <main className="page page--wide admin">
@@ -371,30 +368,14 @@ export default function AdminPage() {
       {error && <p className="c-bad">{error}</p>}
 
       <div className="stat-grid stat-grid--admin">
-        <Stat value={s.visitors} label="Visitors" hint="different people" delta={<Delta cur={s.visitors} prev={s.visitorsPrev} label={prevLabel} />} />
-        <Stat value={s.visits} label="Visits" hint="times the site was opened" delta={<Delta cur={s.visits} prev={s.visitsPrev} label={prevLabel} />} />
-        <Stat value={data.newSince ? s.fresh : '-'} label="New visitors" hint="first time ever" delta={data.newSince && <Delta cur={s.fresh} prev={s.freshPrev} label={prevLabel} />} />
-        <Stat
-          value={s.returning ?? '-'} label="Returning visitors"
-          hint={s.returningFrom
-            ? `since ${fmtDay(s.returningFrom)}, when this started counting`
-            : s.returning !== null && s.visitors ? `${Math.round((s.returning / s.visitors) * 100)}% of visitors` : 'been here before'}
-        />
-        <Stat value={s.answers} label="Cases answered" hint="tracks + daily" delta={<Delta cur={s.answers} prev={s.answersPrev} label={prevLabel} />} />
+        <Stat value={s.visitors} label="Visitors" delta={<Delta cur={s.visitors} prev={s.visitorsPrev} label={prevLabel} />} />
+        <Stat value={s.visits} label="Visits" delta={<Delta cur={s.visits} prev={s.visitsPrev} label={prevLabel} />} />
+        <Stat value={data.newSince ? s.fresh : '-'} label="New visitors" delta={data.newSince && <Delta cur={s.fresh} prev={s.freshPrev} label={prevLabel} />} />
+        <Stat value={s.returning ?? '-'} label="Returning visitors" />
+        <Stat value={s.answers} label="Cases answered" delta={<Delta cur={s.answers} prev={s.answersPrev} label={prevLabel} />} />
         <Stat value={rated.length ? ratingAvg.toFixed(1) : '-'} label="Avg rating" hint={`${rated.length} ${rated.length === 1 ? 'rating' : 'ratings'}`} />
       </div>
-      {!s.splitOk && !s.returningFrom && <p className="muted admin__note">{splitNote}</p>}
 
-      <details className="card explain">
-        <summary>What do these numbers mean?</summary>
-        <dl>
-          <dt>Visitors</dt><dd>Different people (strictly: different browsers). Someone who opens Casework 5 times in the range counts as 1.</dd>
-          <dt>Visits</dt><dd>Every time someone opens or reloads the site. 1 person opening it on Monday and again on Friday is 2 visits. Visits ÷ visitors tells you how often people come back.</dd>
-          <dt>New visitors</dt><dd>People whose browser had never opened Casework before. Each person is new only once, ever.</dd>
-          <dt>Returning visitors</dt><dd>Visitors in the range who had been here before (an earlier day, or earlier in the range). Visitors minus new.</dd>
-          <dt>Limits</dt><dd>Someone on a new phone or in a private window looks like a new person. Your own visits from this browser are not counted (see the switch at the bottom). Days are in UTC; hours are shown in your local time.</dd>
-        </dl>
-      </details>
 
       <div className="card">
         <span className="label">Visitors {rid === '24h' ? 'per hour' : 'per day'}</span>

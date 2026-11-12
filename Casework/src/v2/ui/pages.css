@@ -489,7 +489,6 @@ a.track:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
 /* ─── Admin: range picker, stacked charts, phone layout ─────────────────── */
 .admin__head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
 .admin__sub { margin-top: 4px; font-size: 14px; }
-.admin__note { font-size: 13px; margin-top: -8px; }
 .admin__section { font-size: 20px; margin-top: 16px; }
 .seg { display: flex; gap: 4px; padding: 4px; border-radius: 14px; background: var(--paper-2); width: fit-content; max-width: 100%; overflow-x: auto; scrollbar-width: none; }
 .seg::-webkit-scrollbar { display: none; }
@@ -506,10 +505,6 @@ a.track:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
 .delta { font-size: 12px; font-weight: 600; color: var(--ink-3); }
 .delta.is-up { color: var(--good); }
 .delta.is-down { color: var(--bad); }
-.explain summary { cursor: pointer; font-weight: 600; font-size: 14px; }
-.explain dl { display: grid; grid-template-columns: 160px 1fr; gap: 8px 16px; margin-top: 12px; font-size: 14px; }
-.explain dt { font-weight: 700; }
-.explain dd { margin: 0; color: var(--ink-2); }
 .chart__bars.is-stacked { position: relative; flex-direction: column-reverse; justify-content: flex-start; align-items: stretch; gap: 0; }
 .chart__bars.is-stacked i { flex: none; border-radius: 0; }
 .chart__bars.is-stacked i:not(.is-zero):last-of-type, .chart__bars.is-stacked i:not(.is-zero):has(~ i.is-zero:last-of-type) { border-radius: 3px 3px 0 0; }
@@ -534,9 +529,7 @@ a.track:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
   .seg__short { display: inline; }
   .custom-range label { flex: 1; }
   .custom-range .input { min-width: 0; width: 100%; }
-  .explain dl { grid-template-columns: 1fr; gap: 2px; }
-  .explain dd { margin-bottom: 8px; }
-  .admin .chart__plot, .admin .chart__axis { height: 140px; }
+      .admin .chart__plot, .admin .chart__axis { height: 140px; }
   .admin .chart__tip { font-size: 11px; padding: 6px 10px; }
   .admin .chart__dates { font-size: 10px; }
   .admin .chart__dates .is-alt { visibility: hidden; }
