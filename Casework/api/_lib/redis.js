@@ -28,7 +28,8 @@ function memRun([cmd, key, ...args]) {
     case 'INCR': { mem.set(key, (Number(mem.get(key)) || 0) + 1); return mem.get(key); }
     case 'GET': { const v = mem.get(key); return v === undefined ? null : String(v); }
     case 'PFADD': { const s = get('set'); args.forEach(a => s.add(a)); return 1; }
-    case 'PFCOUNT': { const s = mem.get(key); return s ? s.size : 0; }
+    case 'PFCOUNT': { const u = new Set(); [key, ...args].forEach(k => mem.get(k)?.forEach?.(v => u.add(v))); return u.size; }
+    case 'SET': { if (args.includes('NX') && mem.has(key)) return null; mem.set(key, args[0]); return 'OK'; }
     case 'LPUSH': { const l = get('list'); l.unshift(...args.reverse()); return l.length; }
     case 'LTRIM': { const l = get('list'); mem.set(key, l.slice(Number(args[0]), Number(args[1]) + 1)); return 'OK'; }
     case 'LRANGE': { const l = mem.get(key) || []; return l.slice(Number(args[0]), Number(args[1]) === -1 ? undefined : Number(args[1]) + 1); }

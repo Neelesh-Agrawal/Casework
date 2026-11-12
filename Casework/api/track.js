@@ -2,40 +2,58 @@
  * Anonymous gameplay analytics → Upstash. Powers the /admin dashboard (drop-off per case, daily plays, feedback).
  *   POST /api/track { sid, events: [{ e, track?, case?, verdict?, ch?, rating?, comment?, where? }] }
  * No personal data: `sid` is a random id stored in the player's browser.
+ *
+ * Keys (day = UTC YYYY-MM-DD, HH = UTC hour):
+ *   cw:pv:{day}          visits (app opens)            cw:uv:{day}       unique visitors (HyperLogLog)
+ *   cw:act:{day}         hash: new, hHH (visits per hour), nHH (new per hour), aHH (answers per hour), answers, starts, completes, shares
+ *   cw:uvh:{day}T{HH}    unique visitors in that hour (kept 10 days, for the 24 hour view)
+ *   cw:meta:newsince     first day new-vs-returning was recorded
  */
 import { configured, ID_RE, pipeline, today } from './_lib/redis.js';
 
 const VERDICTS = new Set(['strong', 'okay', 'costly']);
 const SHARE_TARGETS = new Set(['x', 'linkedin', 'copy', 'card', 'native']);
 const MAX_EVENTS = 25;
-const DAY_TTL = 60 * 60 * 24 * 120; // keep daily keys ~4 months
+const DAY_TTL = 60 * 60 * 24 * 800; // keep daily keys ~2 years
+const HOUR_TTL = 60 * 60 * 24 * 10;
 
-function commandsFor(ev, sid, day) {
+function commandsFor(ev, sid, day, hh) {
   const t = ID_RE.test(ev.track || '') ? ev.track : null;
   const c = ID_RE.test(ev.case || '') ? ev.case : null;
+  const act = `cw:act:${day}`;
+  const bump = (field) => [['HINCRBY', act, field, 1], ['EXPIRE', act, DAY_TTL]];
   switch (ev.e) {
-    case 'visit':
-      return [['INCR', `cw:pv:${day}`], ['EXPIRE', `cw:pv:${day}`, DAY_TTL], ['PFADD', `cw:uv:${day}`, sid], ['EXPIRE', `cw:uv:${day}`, DAY_TTL]];
+    case 'visit': {
+      const hourKey = `cw:uvh:${day}T${hh}`;
+      const out = [
+        ['INCR', `cw:pv:${day}`], ['EXPIRE', `cw:pv:${day}`, DAY_TTL],
+        ['PFADD', `cw:uv:${day}`, sid], ['EXPIRE', `cw:uv:${day}`, DAY_TTL],
+        ['PFADD', hourKey, sid], ['EXPIRE', hourKey, HOUR_TTL],
+        ...bump(`h${hh}`),
+      ];
+      if (ev.new === true) out.push(...bump('new'), ...bump(`n${hh}`), ['SET', 'cw:meta:newsince', day, 'NX']);
+      return out;
+    }
     case 'track_start':
-      return t ? [['HINCRBY', `cw:track:${t}`, 'starts', 1], ['PFADD', `cw:players:${t}`, sid]] : [];
+      return t ? [['HINCRBY', `cw:track:${t}`, 'starts', 1], ['PFADD', `cw:players:${t}`, sid], ...bump('starts')] : [];
     case 'case_view':
       return t && c ? [['HINCRBY', `cw:case:${t}`, `${c}:view`, 1]] : [];
     case 'case_answer':
       return t && c && VERDICTS.has(ev.verdict)
-        ? [['HINCRBY', `cw:case:${t}`, `${c}:answer`, 1], ['HINCRBY', `cw:case:${t}`, `${c}:${ev.verdict}`, 1]]
+        ? [['HINCRBY', `cw:case:${t}`, `${c}:answer`, 1], ['HINCRBY', `cw:case:${t}`, `${c}:${ev.verdict}`, 1], ...bump('answers'), ...bump(`a${hh}`)]
         : [];
     case 'chapter_done':
       return t && Number.isInteger(ev.ch) ? [['HINCRBY', `cw:track:${t}`, `ch${ev.ch}`, 1]] : [];
     case 'track_done':
-      return t ? [['HINCRBY', `cw:track:${t}`, 'completes', 1]] : [];
+      return t ? [['HINCRBY', `cw:track:${t}`, 'completes', 1], ...bump('completes')] : [];
     case 'daily_view':
       return c ? [['HINCRBY', `cw:daily:${day}`, 'views', 1], ['HSET', `cw:daily:${day}`, 'case', c], ['EXPIRE', `cw:daily:${day}`, DAY_TTL]] : [];
     case 'daily_answer':
       return c && VERDICTS.has(ev.verdict)
-        ? [['HINCRBY', `cw:daily:${day}`, 'answers', 1], ['HINCRBY', `cw:daily:${day}`, ev.verdict, 1]]
+        ? [['HINCRBY', `cw:daily:${day}`, 'answers', 1], ['HINCRBY', `cw:daily:${day}`, ev.verdict, 1], ...bump('answers'), ...bump(`a${hh}`)]
         : [];
     case 'share':
-      return SHARE_TARGETS.has(ev.where) ? [['HINCRBY', 'cw:shares', ev.where, 1]] : [];
+      return SHARE_TARGETS.has(ev.where) ? [['HINCRBY', 'cw:shares', ev.where, 1], ...bump('shares')] : [];
     case 'feedback': {
       const rating = Number(ev.rating);
       if (!(rating >= 1 && rating <= 5)) return [];
@@ -65,7 +83,8 @@ export default async function handler(req, res) {
 
   try {
     const day = today();
-    await pipeline(events.flatMap(ev => commandsFor(ev || {}, sid, day)));
+    const hh = new Date().toISOString().slice(11, 13);
+    await pipeline(events.flatMap(ev => commandsFor(ev || {}, sid, day, hh)));
     return res.status(204).end();
   } catch (err) {
     return res.status(502).json({ error: 'Analytics store unavailable', detail: err.message });

@@ -1,14 +1,23 @@
 // Anonymous, batched gameplay events → /api/track. Fire-and-forget; never blocks the game.
 
 const SID_KEY = 'casework.sid';
+export const OWNER_KEY = 'casework.owner'; // set once you open /admin, so your own visits aren't counted
 const queue = [];
 let timer = null;
 const seen = new Set(); // dedupe "view" events within a session
+
+// True when this browser has never been here before (no saved id yet). Read once, before the id is created.
+let firstEver = false;
+
+function isOwner() {
+  try { return localStorage.getItem(OWNER_KEY) === '1'; } catch { return false; }
+}
 
 function sessionId() {
   try {
     let id = localStorage.getItem(SID_KEY);
     if (!id) {
+      firstEver = true;
       id = crypto.randomUUID();
       localStorage.setItem(SID_KEY, id);
     }
@@ -33,10 +42,15 @@ function flush() {
 }
 
 export function track(e, props = {}, { once } = {}) {
+  if (isOwner() || (typeof location !== 'undefined' && location.pathname.startsWith('/admin'))) return;
   if (once) {
     const k = `${e}:${once}`;
     if (seen.has(k)) return;
     seen.add(k);
+  }
+  if (e === 'visit') {
+    sessionId(); // creates the id on a first-ever visit, which sets firstEver
+    if (firstEver) props = { ...props, new: true };
   }
   queue.push({ e, ...props });
   if (!timer) timer = setTimeout(flush, 1500);
